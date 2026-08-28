@@ -1,0 +1,16 @@
+node_modules
+dist
+.next
+.turbo
+coverage
+data
+*.db
+*.db-wal
+*.db-shm
+.env
+.env.local
+.DS_Store
+*.log
+apps/web/.next
+apps/api/dist
+packages/api-client/src/schema.d.ts.bak
