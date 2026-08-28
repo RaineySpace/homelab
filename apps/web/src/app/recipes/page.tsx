@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useEffect, useRef, useState } from 'react'
 import { AppShell } from '@/components/AppShell'
 import { api, problemMessage } from '@/lib/api'
 
@@ -11,6 +11,8 @@ export default function RecipesPage() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([])
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [error, setError] = useState('')
+  const ingredientRef = useRef<HTMLFormElement>(null)
+  const recipeRef = useRef<HTMLFormElement>(null)
   async function refresh() {
     const [ing, rec] = await Promise.all([api<Ingredient[]>('/ingredients'), api<Recipe[]>('/recipes')])
     setIngredients(ing)
@@ -21,13 +23,16 @@ export default function RecipesPage() {
   }, [])
   async function addIngredient(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const form = new FormData(event.currentTarget)
+    const formEl = ingredientRef.current
+    if (!formEl) return
+    const form = new FormData(formEl)
     try {
       await api('/ingredients', {
         method: 'POST',
         body: JSON.stringify({ name: String(form.get('name')), unit: String(form.get('unit') || '') || null }),
       })
-      event.currentTarget.reset()
+      formEl.reset()
+      setError('')
       await refresh()
     } catch (err) {
       setError(problemMessage(err))
@@ -35,7 +40,9 @@ export default function RecipesPage() {
   }
   async function addRecipe(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const form = new FormData(event.currentTarget)
+    const formEl = recipeRef.current
+    if (!formEl) return
+    const form = new FormData(formEl)
     try {
       await api('/recipes', {
         method: 'POST',
@@ -50,7 +57,8 @@ export default function RecipesPage() {
           ingredients: [],
         }),
       })
-      event.currentTarget.reset()
+      formEl.reset()
+      setError('')
       await refresh()
     } catch (err) {
       setError(problemMessage(err))
@@ -61,14 +69,14 @@ export default function RecipesPage() {
       <h1>食材与菜谱</h1>
       {error ? <p className="error">{error}</p> : null}
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
-        <form className="panel grid" onSubmit={addIngredient}>
+        <form ref={ingredientRef} className="panel grid" method="post" onSubmit={addIngredient}>
           <h2>新食材</h2>
           <input name="name" placeholder="名称" required />
           <input name="unit" placeholder="单位，如 g / 个" />
           <button className="btn" type="submit">添加食材</button>
           <p className="muted">已有：{ingredients.map((item) => item.name).join('、') || '暂无'}</p>
         </form>
-        <form className="panel grid" onSubmit={addRecipe}>
+        <form ref={recipeRef} className="panel grid" method="post" onSubmit={addRecipe}>
           <h2>新菜谱</h2>
           <input name="title" placeholder="菜名" required />
           <input name="cookingMinutes" type="number" min={1} defaultValue={20} />

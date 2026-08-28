@@ -23,7 +23,8 @@ export default function MealsPage() {
   }, [])
   async function compose(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const form = new FormData(event.currentTarget)
+    const formEl = event.currentTarget
+    const form = new FormData(formEl)
     try {
       const created = await api<Draft>('/meal-drafts', {
         method: 'POST',
@@ -55,7 +56,7 @@ export default function MealsPage() {
     <AppShell>
       <h1>配餐与用餐</h1>
       {error ? <p className="error">{error}</p> : null}
-      <form className="panel row" onSubmit={compose}>
+      <form className="panel row" method="post" onSubmit={compose}>
         <select name="mealType" defaultValue="dinner">
           <option value="breakfast">早餐</option>
           <option value="lunch">午餐</option>

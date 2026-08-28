@@ -1014,6 +1014,12 @@
           },
           "updatedAt": {
             "type": "string"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AgentEvent"
+            }
           }
         },
         "required": [
@@ -1021,9 +1027,22 @@
           "status",
           "message",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "events"
         ],
         "additionalProperties": false
+      },
+      "AgentEvent": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "additionalProperties": {}
       },
       "StartAgentRunRequest": {
         "type": "object",

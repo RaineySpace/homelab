@@ -7,6 +7,7 @@ const apiOrigin = (process.env.INTERNAL_API_BASE_URL ?? 'http://127.0.0.1:3001/a
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  allowedDevOrigins: ['127.0.0.1', 'localhost'],
   transpilePackages: ['@family-os/api-client'],
   async rewrites() {
     return [

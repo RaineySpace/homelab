@@ -30,13 +30,13 @@
 | [P08](./P08-tasks.md) | 任务模块 | 业务 | 已完成 | P05 |
 | [P09](./P09-agent.md) | Agent 内核与工具注册 | 业务 | 已完成 | P05, P07, P08 |
 | [P10](./P10-api-client.md) | OpenAPI 客户端生成 | 契约 | 已完成 | P03 |
-| [P11](./P11-web-app.md) | Next.js Web 首期界面 | 前端 | 正在执行 | P10, P04–P09 |
-| [P12](./P12-deploy.md) | Docker Compose 同域部署 | 部署 | 正在执行 | P03, P11 |
-| [P13](./P13-verification.md) | 首期验收与回归 | 验收 | 正在执行 | P02–P12 |
+| [P11](./P11-web-app.md) | Next.js Web 首期界面 | 前端 | 已完成 | P10, P04–P09 |
+| [P12](./P12-deploy.md) | Docker Compose 同域部署 | 部署 | 已完成 | P03, P11 |
+| [P13](./P13-verification.md) | 首期验收与回归 | 验收 | 已完成 | P02–P12 |
 
 ## 统计
 
-- 已完成：11
-- 正在执行：3
+- 已完成：14
+- 正在执行：0
 - 未完成：0
 - 已阻塞：0

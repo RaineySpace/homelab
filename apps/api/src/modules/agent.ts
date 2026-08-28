@@ -396,6 +396,13 @@ export async function* runAgent(options: {
 }
 
 const StartRunRequestSchema = z.strictObject({ message: z.string().trim().min(1).max(4000) }).openapi('StartAgentRunRequest')
+const AgentEventSchema = z
+  .object({
+    type: z.string(),
+  })
+  .passthrough()
+  .openapi('AgentEvent')
+
 const AgentRunResponseSchema = z
   .strictObject({
     id: z.string(),
@@ -403,6 +410,7 @@ const AgentRunResponseSchema = z
     message: z.string(),
     createdAt: z.string(),
     updatedAt: z.string(),
+    events: z.array(AgentEventSchema),
   })
   .openapi('AgentRun')
 
@@ -413,6 +421,7 @@ function toRun(row: typeof agentRuns.$inferSelect) {
     message: row.message,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+    events: eventLog.get(row.id) ?? [],
   }
 }
 

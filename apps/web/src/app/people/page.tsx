@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useEffect, useRef, useState } from 'react'
 import { AppShell } from '@/components/AppShell'
 import { api, problemMessage } from '@/lib/api'
 
@@ -9,6 +9,7 @@ type Person = { id: string; name: string; sex: string | null; version: number; b
 export default function PeoplePage() {
   const [people, setPeople] = useState<Person[]>([])
   const [error, setError] = useState('')
+  const formRef = useRef<HTMLFormElement>(null)
   async function refresh() {
     setPeople(await api<Person[]>('/people'))
   }
@@ -17,7 +18,9 @@ export default function PeoplePage() {
   }, [])
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const form = new FormData(event.currentTarget)
+    const formEl = formRef.current
+    if (!formEl) return
+    const form = new FormData(formEl)
     try {
       await api('/people', {
         method: 'POST',
@@ -27,7 +30,7 @@ export default function PeoplePage() {
           birth: null,
         }),
       })
-      event.currentTarget.reset()
+      formEl.reset()
       await refresh()
       setError('')
     } catch (err) {
@@ -41,7 +44,7 @@ export default function PeoplePage() {
   return (
     <AppShell>
       <h1>家庭人物</h1>
-      <form className="panel row" onSubmit={onSubmit}>
+      <form ref={formRef} className="panel row" method="post" onSubmit={onSubmit}>
         <input name="name" placeholder="姓名" required />
         <select name="sex" defaultValue="">
           <option value="">性别（可选）</option>

@@ -3047,6 +3047,12 @@ export interface components {
             message: string;
             createdAt: string;
             updatedAt: string;
+            events: components["schemas"]["AgentEvent"][];
+        };
+        AgentEvent: {
+            type: string;
+        } & {
+            [key: string]: unknown;
         };
         StartAgentRunRequest: {
             message: string;

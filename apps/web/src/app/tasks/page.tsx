@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useEffect, useRef, useState } from 'react'
 import { AppShell } from '@/components/AppShell'
 import { api, problemMessage } from '@/lib/api'
 
@@ -9,6 +9,7 @@ type Task = { id: string; title: string; status: string; completedAt: string | n
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [error, setError] = useState('')
+  const formRef = useRef<HTMLFormElement>(null)
   async function refresh() {
     setTasks(await api<Task[]>('/tasks'))
   }
@@ -17,7 +18,9 @@ export default function TasksPage() {
   }, [])
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const form = new FormData(event.currentTarget)
+    const formEl = formRef.current
+    if (!formEl) return
+    const form = new FormData(formEl)
     try {
       await api('/tasks', {
         method: 'POST',
@@ -28,7 +31,8 @@ export default function TasksPage() {
           dueAt: null,
         }),
       })
-      event.currentTarget.reset()
+      formEl.reset()
+      setError('')
       await refresh()
     } catch (err) {
       setError(problemMessage(err))
@@ -41,7 +45,7 @@ export default function TasksPage() {
   return (
     <AppShell>
       <h1>家庭任务</h1>
-      <form className="panel row" onSubmit={onSubmit}>
+      <form ref={formRef} className="panel row" method="post" onSubmit={onSubmit}>
         <input name="title" placeholder="例如：洗碗" required />
         <button className="btn" type="submit">创建</button>
       </form>

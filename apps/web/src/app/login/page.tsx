@@ -9,7 +9,8 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const form = new FormData(event.currentTarget)
+    const formEl = event.currentTarget
+    const form = new FormData(formEl)
     try {
       await api('/auth/login', {
         method: 'POST',
@@ -25,7 +26,7 @@ export default function LoginPage() {
   }
   return (
     <div className="login">
-      <form className="panel grid" onSubmit={onSubmit}>
+      <form className="panel grid" method="post" onSubmit={onSubmit}>
         <h1>登录家庭</h1>
         <p className="muted">默认账号 admin / changeme，请在生产环境立即修改。</p>
         <label>
