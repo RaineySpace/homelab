@@ -33,10 +33,11 @@
 | [P11](./P11-web-app.md) | Next.js Web 首期界面 | 前端 | 已完成 | P10, P04–P09 |
 | [P12](./P12-deploy.md) | Docker Compose 同域部署 | 部署 | 已完成 | P03, P11 |
 | [P13](./P13-verification.md) | 首期验收与回归 | 验收 | 已完成 | P02–P12 |
+| [P14](./P14-agent-model-providers.md) | Agent 模型可更换（默认 DeepSeek） | 业务 | 已完成 | P09 |
 
 ## 统计
 
-- 已完成：14
+- 已完成：15
 - 正在执行：0
 - 未完成：0
 - 已阻塞：0

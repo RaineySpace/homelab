@@ -13,8 +13,10 @@ services:
 P0 不启动 Worker。Agent 在 API 进程内完成：
 
 ```text
-HTTP Request → SSE → DeepSeek → Tool Call → Command → Database
+HTTP Request → SSE → ModelGateway（默认 DeepSeek）→ Tool Call → Command → Database
 ```
+
+模型供应商由 `AGENT_MODEL_PROVIDER`（默认 `deepseek`）与 `PUT /api/v1/agent/model` 决定。密钥只进入 `api` 容器环境或家庭加密设置，不进入 Web 镜像。
 
 ## 同域转发
 

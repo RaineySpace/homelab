@@ -22,11 +22,14 @@ export const PERMISSIONS = [
   'tasks:complete',
   'agent:run',
   'agent:approve',
+  'agent:configure',
 ] as const
 
 export type Permission = (typeof PERMISSIONS)[number]
 
-const MEMBER: Permission[] = [...PERMISSIONS]
+const OWNER_ONLY: Permission[] = ['agent:configure']
+
+const MEMBER: Permission[] = PERMISSIONS.filter((item) => !OWNER_ONLY.includes(item))
 
 const VIEWER: Permission[] = PERMISSIONS.filter((item) => item.endsWith(':read'))
 

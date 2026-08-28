@@ -30,8 +30,10 @@
                                                │
                            ┌───────────────────┼─────────────────┐
                            ▼                   ▼                 ▼
-                       SQLite              文件目录         DeepSeek API
-                       /data/app.db        /data/files       ModelGateway
+                       SQLite              文件目录         ModelGateway
+                       /data/app.db        /data/files    默认 DeepSeek
+                                                          可换 OpenAI / Ollama
+                                                          / OpenAI 兼容端点
 ```
 
 未来增加客户端时，全部走同一套 OpenAPI：
@@ -75,7 +77,7 @@ backup
 Next.js 可以做 BFF，但 BFF 偏向服务某一个前端。本项目明确要多端、Agent 工具、SQLite 单所有者。因此：
 
 - 核心业务 API 不能依赖 Next.js 页面生命周期。
-- DeepSeek Key、表结构、工具执行、家庭权限只存在于 Hono。
+- 模型密钥、表结构、工具执行、家庭权限只存在于 Hono。Web 只看见当前供应商的展示名，看不到 Key。
 - Web 只知道稳定 HTTP 资源，例如 `POST /api/v1/people`。
 
 ## 技术定版
@@ -88,7 +90,7 @@ Next.js 可以做 BFF，但 BFF 偏向服务某一个前端。本项目明确要
 | 契约 | Zod Code First，OpenAPI Contract First |
 | 客户端 | `openapi-typescript` + `openapi-fetch` |
 | 数据库 | SQLite + WAL + Drizzle，仅 API（及未来同机 Worker）访问 |
-| Agent | DeepSeekModelGateway + ToolRegistry，工具进入同一套 Command |
+| Agent | Provider Registry + OpenAI 兼容 ModelGateway（默认 DeepSeek）+ ToolRegistry，工具进入同一套 Command |
 | 错误 | RFC 9457 Problem Details |
 | 部署 | 同域路径转发，Docker Compose |
 

@@ -2832,6 +2832,173 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/agent/model": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 当前模型 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AgentModel"];
+                    };
+                };
+                /** @description 未登录 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+                /** @description 没有权限 */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+                /** @description 不存在 */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+                /** @description 冲突 */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+                /** @description 校验失败 */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+                /** @description 服务器错误 */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description 更换模型 */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateAgentModelRequest"];
+                };
+            };
+            responses: {
+                /** @description 已保存 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AgentModel"];
+                    };
+                };
+                /** @description 未登录 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+                /** @description 没有权限 */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+                /** @description 不存在 */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+                /** @description 冲突 */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+                /** @description 校验失败 */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+                /** @description 服务器错误 */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3056,6 +3223,39 @@ export interface components {
         };
         StartAgentRunRequest: {
             message: string;
+        };
+        AgentModel: {
+            requestedProvider: components["schemas"]["AgentModelProviderId"];
+            activeProvider: components["schemas"]["AgentModelProviderId"];
+            usingFallback: boolean;
+            /** @enum {string|null} */
+            fallbackReason: "missing_api_key" | "missing_base_url" | "missing_model" | null;
+            model: string;
+            baseUrl: string;
+            hasApiKey: boolean;
+            /** @enum {string} */
+            apiKeySource: "household" | "env" | "none";
+            /** @enum {string} */
+            source: "household" | "env";
+            canConfigure: boolean;
+            providers: components["schemas"]["AgentModelProvider"][];
+        };
+        /** @enum {string} */
+        AgentModelProviderId: "deepseek" | "openai" | "ollama" | "openai-compatible" | "stub";
+        AgentModelProvider: {
+            id: components["schemas"]["AgentModelProviderId"];
+            label: string;
+            protocol: string;
+            defaultModel: string;
+            defaultBaseUrl: string;
+            suggestedModels: string[];
+            requiresApiKey: boolean;
+        };
+        UpdateAgentModelRequest: {
+            provider: components["schemas"]["AgentModelProviderId"];
+            model?: string | null;
+            baseUrl?: string | null;
+            apiKey?: string | null;
         };
     };
     responses: never;
