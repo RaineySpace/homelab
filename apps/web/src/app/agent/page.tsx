@@ -49,9 +49,18 @@ function formatEvents(events: AgentEvent[]): string {
 
 function statusText(model: AgentModel): string {
   const provider = model.providers.find((item) => item.id === model.activeProvider)
+  const requested = model.providers.find((item) => item.id === model.requestedProvider)
   const name = provider?.label ?? model.activeProvider
   if (model.usingFallback) {
-    return `当前使用${name}（${model.model}）。已请求 ${model.requestedProvider}，因缺少凭证回落。默认供应商是 DeepSeek。`
+    const why =
+      model.fallbackReason === 'missing_api_key'
+        ? '未配置 API Key'
+        : model.fallbackReason === 'missing_base_url'
+          ? '未配置 API 地址'
+          : model.fallbackReason === 'missing_model'
+            ? '未配置模型名'
+            : '配置不完整'
+    return `已请求 ${requested?.label ?? model.requestedProvider}，因${why}回落到${name}（${model.model}）。默认供应商是 DeepSeek。`
   }
   return `当前模型：${name} · ${model.model}`
 }
