@@ -1,0 +1,55 @@
+services:
+  reverse-proxy:
+    image: caddy:2.10-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - web
+      - api
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: web
+    environment:
+      INTERNAL_API_BASE_URL: http://api:3001/api/v1
+      NEXT_PUBLIC_API_BASE_URL: /api/v1
+    depends_on:
+      - api
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: api
+    environment:
+      DATA_DIR: /data
+      API_HOST: 0.0.0.0
+      API_PORT: 3001
+      COOKIE_SECURE: "false"
+      BOOTSTRAP_ADMIN_USERNAME: admin
+      BOOTSTRAP_ADMIN_PASSWORD: changeme
+      BOOTSTRAP_HOUSEHOLD_NAME: 默认家庭
+      PUBLIC_ORIGIN: http://localhost:8080
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+    volumes:
+      - family-data:/data
+
+  backup:
+    image: keinos/sqlite3:latest
+    volumes:
+      - family-data:/data
+      - ./docker/backup.sh:/backup.sh:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while true; do
+          /bin/sh /backup.sh || true
+          sleep 86400
+        done
+
+volumes:
+  family-data:
