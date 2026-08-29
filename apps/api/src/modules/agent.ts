@@ -8,6 +8,13 @@ import { createId, nowIso } from '../core/ids.js'
 import { errorResponses, jsonContent } from '../core/openapi.js'
 import { hasPermission } from '../core/permissions.js'
 import {
+  createModelGateway,
+  listProviderCatalog,
+  MODEL_PROVIDER_IDS,
+  resolveModelSelection,
+  type ModelMessage,
+} from '../core/agent/index.js'
+import {
   archivePersonCommand,
   createPersonCommand,
   getPersonCommand,
@@ -127,150 +134,12 @@ function findTool(name: string): ToolDef {
   return tool
 }
 
-type ModelMessage = {
-  role: 'system' | 'user' | 'assistant' | 'tool'
-  content: string | null
-  tool_calls?: Array<{ id: string; function: { name: string; arguments: string } }>
-  tool_call_id?: string
-}
-
-export interface ModelGateway {
-  complete(input: { messages: ModelMessage[]; tools: Array<{ name: string; description: string; parameters: unknown }> }): Promise<{
-    message: ModelMessage
-  }>
-}
-
 function jsonSchema(schema: z.ZodType): unknown {
   try {
     return z.toJSONSchema(schema as z.ZodTypeAny)
   } catch {
     return { type: 'object' }
   }
-}
-
-export class StubModelGateway implements ModelGateway {
-  async complete(input: { messages: ModelMessage[] }) {
-    const last = input.messages.at(-1)
-    if (last?.role === 'tool') {
-      return {
-        message: {
-          role: 'assistant' as const,
-          content: `已经完成工具调用。结果：${last.content}`,
-        },
-      }
-    }
-    const user = [...input.messages].reverse().find((item) => item.role === 'user')
-    const text = user?.content ?? ''
-    const named = text.match(/叫\s*([^\s的，,。！!？?]{1,20})/)
-    if (/创建|登记|添加/.test(text) && (/人物|成员|人/.test(text) || named)) {
-      const name = named?.[1] ?? '未命名'
-      return {
-        message: {
-          role: 'assistant' as const,
-          content: null,
-          tool_calls: [
-            {
-              id: createId('call'),
-              function: {
-                name: 'people.create',
-                arguments: JSON.stringify({ name, birth: null, sex: null }),
-              },
-            },
-          ],
-        },
-      }
-    }
-    if (/列出|有哪些/.test(text) && /人/.test(text)) {
-      return {
-        message: {
-          role: 'assistant' as const,
-          content: null,
-          tool_calls: [{ id: createId('call'), function: { name: 'people.list', arguments: '{}' } }],
-        },
-      }
-    }
-    if (/归档/.test(text) && /人/.test(text)) {
-      const personId = text.match(/person_[a-z0-9]+/)?.[0]
-      if (personId) {
-        return {
-          message: {
-            role: 'assistant' as const,
-            content: null,
-            tool_calls: [
-              {
-                id: createId('call'),
-                function: { name: 'people.archive', arguments: JSON.stringify({ personId }) },
-              },
-            ],
-          },
-        }
-      }
-    }
-    if (/任务/.test(text) && /创建|添加/.test(text)) {
-      const title = text.replace(/.*(?:叫|名为|：|:)/, '').trim() || '未命名任务'
-      return {
-        message: {
-          role: 'assistant' as const,
-          content: null,
-          tool_calls: [
-            {
-              id: createId('call'),
-              function: {
-                name: 'tasks.create',
-                arguments: JSON.stringify({ title, notes: null, assigneePersonId: null, dueAt: null }),
-              },
-            },
-          ],
-        },
-      }
-    }
-    return {
-      message: {
-        role: 'assistant' as const,
-        content: `我是家庭助手。可以说「登记一个叫妈妈的人」或「列出人物」。你刚才说：${text}`,
-      },
-    }
-  }
-}
-
-export class DeepSeekModelGateway implements ModelGateway {
-  constructor(private env: Env) {}
-
-  async complete(input: {
-    messages: ModelMessage[]
-    tools: Array<{ name: string; description: string; parameters: unknown }>
-  }) {
-    const response = await fetch(`${this.env.DEEPSEEK_BASE_URL.replace(/\/$/, '')}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.env.DEEPSEEK_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: this.env.DEEPSEEK_MODEL,
-        messages: input.messages,
-        tools: input.tools.map((tool) => ({
-          type: 'function',
-          function: { name: tool.name, description: tool.description, parameters: tool.parameters },
-        })),
-      }),
-    })
-    if (!response.ok) {
-      const detail = await response.text()
-      throw Errors.internal(`DeepSeek 调用失败：${response.status} ${detail.slice(0, 300)}`)
-    }
-    const json = (await response.json()) as {
-      choices: Array<{ message: ModelMessage }>
-    }
-    const message = json.choices[0]?.message
-    if (!message) throw Errors.internal('DeepSeek 没有返回消息')
-    return { message }
-  }
-}
-
-export function createModelGateway(env: Env): ModelGateway {
-  if (env.DEEPSEEK_API_KEY) return new DeepSeekModelGateway(env)
-  return new StubModelGateway()
 }
 
 const eventLog = new Map<string, AgentEvent[]>()
@@ -307,7 +176,7 @@ export async function* runAgent(options: {
   runId: string
 }): AsyncGenerator<AgentEvent> {
   const { db, env, identity, requestId, message, runId } = options
-  const gateway = createModelGateway(env)
+  const { gateway } = createModelGateway(env)
   const openaiTools = tools.map((tool) => ({
     name: tool.name,
     description: tool.description,
@@ -428,6 +297,33 @@ function toRun(row: typeof agentRuns.$inferSelect) {
 function requirePerm(identity: RequestIdentity, permission: Parameters<typeof hasPermission>[1]) {
   if (!hasPermission(identity, permission)) throw Errors.forbidden()
 }
+
+const ProviderIdSchema = z.enum(MODEL_PROVIDER_IDS).openapi('AgentModelProviderId')
+
+const AgentModelProviderSchema = z
+  .strictObject({
+    id: z.literal('deepseek'),
+    label: z.string(),
+    defaultModel: z.string(),
+    defaultBaseUrl: z.string(),
+    suggestedModels: z.array(z.string()),
+    requiresApiKey: z.boolean(),
+  })
+  .openapi('AgentModelProvider')
+
+const AgentModelResponseSchema = z
+  .strictObject({
+    requestedProvider: z.literal('deepseek'),
+    activeProvider: ProviderIdSchema,
+    usingFallback: z.boolean(),
+    fallbackReason: z.enum(['missing_api_key']).nullable(),
+    model: z.string(),
+    baseUrl: z.string(),
+    hasApiKey: z.boolean(),
+    source: z.literal('env'),
+    providers: z.array(AgentModelProviderSchema),
+  })
+  .openapi('AgentModel')
 
 export function agentRoutes() {
   const routes = createRouter()
@@ -616,6 +512,34 @@ export function agentRoutes() {
         .where(eq(agentActions.id, actionId))
         .run()
       return c.json({ status: 'rejected' }, 200)
+    },
+  )
+
+  routes.openapi(
+    createRoute({
+      method: 'get',
+      path: '/agent/model',
+      tags: ['Agent'],
+      responses: { 200: jsonContent(AgentModelResponseSchema, '当前模型'), ...errorResponses },
+    }),
+    (c) => {
+      const identity = c.get('identity')
+      requirePerm(identity, 'agent:run')
+      const selection = resolveModelSelection(c.get('env'))
+      return c.json(
+        {
+          requestedProvider: selection.requestedProvider,
+          activeProvider: selection.activeProvider,
+          usingFallback: selection.usingFallback,
+          fallbackReason: selection.fallbackReason,
+          model: selection.model,
+          baseUrl: selection.baseUrl,
+          hasApiKey: selection.hasApiKey,
+          source: selection.source,
+          providers: listProviderCatalog(),
+        },
+        200,
+      )
     },
   )
 

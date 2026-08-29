@@ -14,7 +14,7 @@
 
 - 直接访问 SQLite
 - Server Action 直接执行业务写入
-- 持有 DeepSeek Key
+- 持有任何模型 API Key
 - 维护另一套业务校验
 - Route Handler 实现重复业务 API
 
@@ -32,7 +32,7 @@ Server Action → Generated API Client → Hono API
 
 - SQLite 连接与迁移
 - 本地 `/data/files`
-- DeepSeek / ModelGateway
+- ModelGateway（AI SDK DeepSeek；无 Key 时 Stub）
 - Agent 系统提示词与工具执行
 - 家庭权限与审计
 - OpenAPI 生成

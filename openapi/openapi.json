@@ -1057,6 +1057,111 @@
           "message"
         ],
         "additionalProperties": false
+      },
+      "AgentModel": {
+        "type": "object",
+        "properties": {
+          "requestedProvider": {
+            "type": "string",
+            "enum": [
+              "deepseek"
+            ]
+          },
+          "activeProvider": {
+            "$ref": "#/components/schemas/AgentModelProviderId"
+          },
+          "usingFallback": {
+            "type": "boolean"
+          },
+          "fallbackReason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "missing_api_key",
+              null
+            ]
+          },
+          "model": {
+            "type": "string"
+          },
+          "baseUrl": {
+            "type": "string"
+          },
+          "hasApiKey": {
+            "type": "boolean"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "env"
+            ]
+          },
+          "providers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AgentModelProvider"
+            }
+          }
+        },
+        "required": [
+          "requestedProvider",
+          "activeProvider",
+          "usingFallback",
+          "fallbackReason",
+          "model",
+          "baseUrl",
+          "hasApiKey",
+          "source",
+          "providers"
+        ],
+        "additionalProperties": false
+      },
+      "AgentModelProviderId": {
+        "type": "string",
+        "enum": [
+          "deepseek",
+          "stub"
+        ]
+      },
+      "AgentModelProvider": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "deepseek"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "defaultModel": {
+            "type": "string"
+          },
+          "defaultBaseUrl": {
+            "type": "string"
+          },
+          "suggestedModels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requiresApiKey": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "defaultModel",
+          "defaultBaseUrl",
+          "suggestedModels",
+          "requiresApiKey"
+        ],
+        "additionalProperties": false
       }
     },
     "parameters": {}
@@ -3843,6 +3948,85 @@
                   "required": [
                     "status"
                   ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "没有权限",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "不存在",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "冲突",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "校验失败",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器错误",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent/model": {
+      "get": {
+        "tags": [
+          "Agent"
+        ],
+        "responses": {
+          "200": {
+            "description": "当前模型",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentModel"
                 }
               }
             }

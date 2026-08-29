@@ -13,8 +13,10 @@ services:
 P0 不启动 Worker。Agent 在 API 进程内完成：
 
 ```text
-HTTP Request → SSE → DeepSeek → Tool Call → Command → Database
+HTTP Request → SSE → ModelGateway（AI SDK DeepSeek；无 Key 时 Stub）→ Tool Call → Command → Database
 ```
+
+密钥只进入 `api` 容器环境（`DEEPSEEK_API_KEY`），不进入 Web 镜像，不入库。本地开发把密钥写在 `.env.local`。
 
 ## 同域转发
 
@@ -35,6 +37,7 @@ pnpm dev
 - Web 将 `/api/v1/*` rewrite 到 API
 - OpenAPI 文档：`http://127.0.0.1:3001/api/v1/openapi.json`
 - 健康检查：`GET /api/v1/health`
+- 密钥：`cp .env.local.example .env.local` 后填入 `DEEPSEEK_API_KEY`
 
 ## 环境变量
 

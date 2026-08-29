@@ -26,14 +26,11 @@ export const PERMISSIONS = [
 
 export type Permission = (typeof PERMISSIONS)[number]
 
-const MEMBER: Permission[] = [...PERMISSIONS]
-
 const VIEWER: Permission[] = PERMISSIONS.filter((item) => item.endsWith(':read'))
 
 export function permissionsForRole(role: Role): Permission[] {
-  if (role === 'owner') return [...PERMISSIONS]
-  if (role === 'member') return MEMBER
-  return VIEWER
+  if (role === 'viewer') return VIEWER
+  return [...PERMISSIONS]
 }
 
 export type RequestIdentity = {

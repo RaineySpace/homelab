@@ -35,6 +35,9 @@ services:
       BOOTSTRAP_HOUSEHOLD_NAME: 默认家庭
       PUBLIC_ORIGIN: http://localhost:8080
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-v4-flash}
+      SESSION_SECRET: ${SESSION_SECRET:-dev-session-secret-change-me}
     volumes:
       - family-data:/data
 

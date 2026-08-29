@@ -28,7 +28,8 @@ Repository
 用户对话
    │
    ▼
-DeepSeek Tool Call: people.create
+ModelGateway Tool Call: people.create
+（首期 DeepSeek / AI SDK；无 Key 时 Stub）
    │
    ▼
 Agent Tool 参数 Zod 校验
@@ -91,6 +92,7 @@ await createPersonCommand.execute({
 | `agent.getRun` | 读取 Run |
 | `agent.confirmAction` | 确认敏感动作 |
 | `agent.rejectAction` | 拒绝敏感动作 |
+| `agent.getModel` | 读取当前模型状态（只读） |
 
 ## Agent 事件（与模型无关）
 
@@ -104,7 +106,7 @@ type AgentEvent =
   | { type: 'run.failed'; runId: string; error: ApiProblem }
 ```
 
-客户端不理解 DeepSeek 特有格式。SSE 只推上述事件。
+客户端不理解任何供应商特有格式。SSE 只推上述事件。更换底层模型不得改变事件形状。
 
 ## 敏感写入
 

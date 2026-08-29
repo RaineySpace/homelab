@@ -1,4 +1,4 @@
-import { readFileSync, mkdirSync } from 'node:fs'
+import { readdirSync, readFileSync, mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import Database from 'better-sqlite3'
@@ -35,9 +35,13 @@ export function createDb(sqlite: Database.Database): Db {
 }
 
 export function applyMigrations(sqlite: Database.Database): void {
-  const sqlPath = join(here, '../../../drizzle/0001_init.sql')
-  const sql = readFileSync(sqlPath, 'utf8')
-  sqlite.exec(sql)
+  const dir = join(here, '../../../drizzle')
+  const files = readdirSync(dir)
+    .filter((name) => /^\d+_.*\.sql$/.test(name))
+    .sort()
+  for (const file of files) {
+    sqlite.exec(readFileSync(join(dir, file), 'utf8'))
+  }
 }
 
 export function backupDatabase(sqlite: Database.Database, destination: string): void {

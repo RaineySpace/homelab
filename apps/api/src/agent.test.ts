@@ -45,3 +45,53 @@ describe('agent tools share commands', () => {
     expect((await still.json()).archivedAt).toBeNull()
   })
 })
+
+describe('agent DeepSeek env', () => {
+  it('exposes DeepSeek status and falls back to stub without a key', async () => {
+    const { app } = await createTestApp({ DEEPSEEK_API_KEY: '' })
+    const { cookie } = await login(app)
+    const response = await app.request('/api/v1/agent/model', { headers: { Cookie: cookie } })
+    expect(response.status).toBe(200)
+    const body = (await response.json()) as {
+      requestedProvider: string
+      activeProvider: string
+      usingFallback: boolean
+      fallbackReason: string | null
+      source: string
+      hasApiKey: boolean
+      providers: Array<{ id: string; defaultModel: string }>
+    }
+    expect(body.requestedProvider).toBe('deepseek')
+    expect(body.activeProvider).toBe('stub')
+    expect(body.usingFallback).toBe(true)
+    expect(body.fallbackReason).toBe('missing_api_key')
+    expect(body.source).toBe('env')
+    expect(body.hasApiKey).toBe(false)
+    expect(body.providers.map((item) => item.id)).toEqual(['deepseek'])
+    expect(body.providers[0]?.defaultModel).toBe('deepseek-v4-flash')
+  })
+
+  it('does not allow switching the model over HTTP', async () => {
+    const { app } = await createTestApp()
+    const { cookie } = await login(app)
+    const updated = await app.request('/api/v1/agent/model', {
+      method: 'PUT',
+      headers: jsonHeaders(cookie),
+      body: JSON.stringify({ provider: 'ollama' }),
+    })
+    expect(updated.status).toBe(404)
+  })
+
+  it('falls back to stub tools when DeepSeek has no key', async () => {
+    const { app, db } = await createTestApp()
+    const { cookie } = await login(app)
+    const run = await app.request('/api/v1/agent/runs', {
+      method: 'POST',
+      headers: jsonHeaders(cookie),
+      body: JSON.stringify({ message: '帮我登记一个叫奶奶的人' }),
+    })
+    expect(run.status).toBe(201)
+    expect(((await run.json()) as { status: string }).status).toBe('completed')
+    expect(db.select().from(people).all().some((row) => row.name === '奶奶')).toBe(true)
+  })
+})

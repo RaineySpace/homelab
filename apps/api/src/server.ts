@@ -1,13 +1,8 @@
-import { config } from 'dotenv'
-import { resolve } from 'node:path'
 import { serve } from '@hono/node-server'
 import { loadEnv } from './env.js'
 import { applyMigrations, createDb, createSqlite } from './core/database/client.js'
 import { bootstrapHousehold } from './core/bootstrap.js'
 import { createApp } from './app.js'
-
-config({ path: resolve(process.cwd(), '.env') })
-config({ path: resolve(process.cwd(), '../../.env') })
 
 const env = loadEnv()
 const sqlite = createSqlite(env)

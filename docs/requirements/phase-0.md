@@ -29,7 +29,8 @@
 - 人物 / 食材菜谱 / 配餐用餐 / 任务
 - 幂等键与乐观锁
 - Agent Run + SSE 事件 + 工具注册 + 确认流
-- 无 DeepSeek Key 时使用确定性 Stub Model，保证本地可测
+- Agent 默认 DeepSeek（AI SDK）；无 Key 时使用确定性 Stub Model，保证本地可测
+- 客户端事件形状与底层模型无关；首期不提供 OpenAI / Ollama 切换
 - Next.js 页面覆盖登录、人物、菜谱、配餐、任务、Agent
 - Compose：reverse-proxy / web / api / backup
 

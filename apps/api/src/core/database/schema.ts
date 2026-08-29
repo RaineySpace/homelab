@@ -167,6 +167,15 @@ export const idempotencyKeys = sqliteTable('idempotency_keys', {
   createdAt: text('created_at').notNull(),
 })
 
+export const householdAgentModels = sqliteTable('household_agent_models', {
+  householdId: text('household_id').primaryKey(),
+  provider: text('provider').notNull(),
+  model: text('model'),
+  baseUrl: text('base_url'),
+  apiKeyCipher: text('api_key_cipher'),
+  updatedAt: text('updated_at').notNull(),
+})
+
 export const auditEvents = sqliteTable('audit_events', {
   id: text('id').primaryKey(),
   householdId: text('household_id').notNull(),

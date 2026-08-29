@@ -15,6 +15,8 @@
 
 ```bash
 cp .env.example .env
+cp .env.local.example .env.local
+# 在 .env.local 填入 DEEPSEEK_API_KEY
 pnpm install
 pnpm dev
 ```
@@ -23,6 +25,7 @@ pnpm dev
 - API: http://127.0.0.1:3001
 - OpenAPI: http://127.0.0.1:3001/api/v1/openapi.json
 - 默认账号：`admin` / `changeme`（见 `.env.example`）
+- Agent 密钥：`DEEPSEEK_API_KEY` 只从环境变量读取（`.env` / `.env.local`，后者覆盖前者）
 
 ## 常用命令
 

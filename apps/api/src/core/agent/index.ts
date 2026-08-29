@@ -1,0 +1,8 @@
+export { MODEL_PROVIDER_IDS, MODEL_PROVIDERS, listProviderCatalog, isModelProviderId } from './catalog.js'
+export type { ModelProviderId, ProviderPreset } from './catalog.js'
+export { createModelGateway } from './factory.js'
+export { resolveModelSelection } from './resolve.js'
+export type { ModelSelection } from './resolve.js'
+export { StubModelGateway } from './stub.js'
+export { DeepSeekModelGateway, toAiSdkMessages } from './deepseek.js'
+export type { ModelGateway, ModelMessage, ModelCompleteInput } from './types.js'
