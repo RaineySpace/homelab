@@ -7,15 +7,11 @@ import { AppError, Errors } from '../core/errors.js'
 import { createId, nowIso } from '../core/ids.js'
 import { errorResponses, jsonContent } from '../core/openapi.js'
 import { hasPermission } from '../core/permissions.js'
-import { writeAudit } from '../core/audit.js'
 import {
   createModelGateway,
-  isModelProviderId,
   listProviderCatalog,
   MODEL_PROVIDER_IDS,
-  readHouseholdOverride,
   resolveModelSelection,
-  saveHouseholdAgentModel,
   type ModelMessage,
 } from '../core/agent/index.js'
 import {
@@ -180,8 +176,7 @@ export async function* runAgent(options: {
   runId: string
 }): AsyncGenerator<AgentEvent> {
   const { db, env, identity, requestId, message, runId } = options
-  const household = readHouseholdOverride(db, env, identity.householdId)
-  const { gateway } = createModelGateway(env, household)
+  const { gateway } = createModelGateway(env)
   const openaiTools = tools.map((tool) => ({
     name: tool.name,
     description: tool.description,
@@ -307,9 +302,8 @@ const ProviderIdSchema = z.enum(MODEL_PROVIDER_IDS).openapi('AgentModelProviderI
 
 const AgentModelProviderSchema = z
   .strictObject({
-    id: ProviderIdSchema,
+    id: z.literal('deepseek'),
     label: z.string(),
-    protocol: z.string(),
     defaultModel: z.string(),
     defaultBaseUrl: z.string(),
     suggestedModels: z.array(z.string()),
@@ -319,28 +313,17 @@ const AgentModelProviderSchema = z
 
 const AgentModelResponseSchema = z
   .strictObject({
-    requestedProvider: ProviderIdSchema,
+    requestedProvider: z.literal('deepseek'),
     activeProvider: ProviderIdSchema,
     usingFallback: z.boolean(),
-    fallbackReason: z.enum(['missing_api_key', 'missing_base_url', 'missing_model']).nullable(),
+    fallbackReason: z.enum(['missing_api_key']).nullable(),
     model: z.string(),
     baseUrl: z.string(),
     hasApiKey: z.boolean(),
-    apiKeySource: z.enum(['household', 'env', 'none']),
-    source: z.enum(['household', 'env']),
-    canConfigure: z.boolean(),
+    source: z.literal('env'),
     providers: z.array(AgentModelProviderSchema),
   })
   .openapi('AgentModel')
-
-const UpdateAgentModelRequestSchema = z
-  .strictObject({
-    provider: ProviderIdSchema,
-    model: z.string().trim().min(1).max(120).nullable().optional(),
-    baseUrl: z.string().trim().max(500).nullable().optional(),
-    apiKey: z.string().max(500).nullable().optional(),
-  })
-  .openapi('UpdateAgentModelRequest')
 
 export function agentRoutes() {
   const routes = createRouter()
@@ -542,9 +525,7 @@ export function agentRoutes() {
     (c) => {
       const identity = c.get('identity')
       requirePerm(identity, 'agent:run')
-      const env = c.get('env')
-      const household = readHouseholdOverride(c.get('db'), env, identity.householdId)
-      const selection = resolveModelSelection(env, household)
+      const selection = resolveModelSelection(c.get('env'))
       return c.json(
         {
           requestedProvider: selection.requestedProvider,
@@ -554,65 +535,7 @@ export function agentRoutes() {
           model: selection.model,
           baseUrl: selection.baseUrl,
           hasApiKey: selection.hasApiKey,
-          apiKeySource: selection.apiKeySource,
           source: selection.source,
-          canConfigure: hasPermission(identity, 'agent:configure'),
-          providers: listProviderCatalog(),
-        },
-        200,
-      )
-    },
-  )
-
-  routes.openapi(
-    createRoute({
-      method: 'put',
-      path: '/agent/model',
-      tags: ['Agent'],
-      request: { body: jsonContent(UpdateAgentModelRequestSchema, '更换模型') },
-      responses: { 200: jsonContent(AgentModelResponseSchema, '已保存'), ...errorResponses },
-    }),
-    (c) => {
-      const identity = c.get('identity')
-      requirePerm(identity, 'agent:configure')
-      const env = c.get('env')
-      const db = c.get('db')
-      const body = c.req.valid('json')
-      if (!isModelProviderId(body.provider)) {
-        throw Errors.validation('不支持的模型供应商', [
-          { path: ['provider'], code: 'invalid', message: `未知供应商 ${body.provider}` },
-        ])
-      }
-      saveHouseholdAgentModel(db, env, identity.householdId, {
-        provider: body.provider,
-        model: body.model === undefined ? null : body.model,
-        baseUrl: body.baseUrl === undefined ? null : body.baseUrl,
-        apiKey: body.apiKey,
-      })
-      writeAudit(
-        db,
-        { identity, requestId: c.get('requestId'), source: 'manual' },
-        {
-          command: 'agent.configureModel',
-          entityType: 'household_agent_model',
-          entityId: identity.householdId,
-          detail: { provider: body.provider, model: body.model ?? null },
-        },
-      )
-      const household = readHouseholdOverride(db, env, identity.householdId)
-      const selection = resolveModelSelection(env, household)
-      return c.json(
-        {
-          requestedProvider: selection.requestedProvider,
-          activeProvider: selection.activeProvider,
-          usingFallback: selection.usingFallback,
-          fallbackReason: selection.fallbackReason,
-          model: selection.model,
-          baseUrl: selection.baseUrl,
-          hasApiKey: selection.hasApiKey,
-          apiKeySource: selection.apiKeySource,
-          source: selection.source,
-          canConfigure: true,
           providers: listProviderCatalog(),
         },
         200,

@@ -46,9 +46,9 @@ describe('agent tools share commands', () => {
   })
 })
 
-describe('agent model providers', () => {
-  it('exposes the default DeepSeek catalog and falls back to stub without a key', async () => {
-    const { app } = await createTestApp({ AGENT_MODEL_PROVIDER: 'deepseek', DEEPSEEK_API_KEY: '' })
+describe('agent DeepSeek env', () => {
+  it('exposes DeepSeek status and falls back to stub without a key', async () => {
+    const { app } = await createTestApp({ DEEPSEEK_API_KEY: '' })
     const { cookie } = await login(app)
     const response = await app.request('/api/v1/agent/model', { headers: { Cookie: cookie } })
     expect(response.status).toBe(200)
@@ -56,67 +56,34 @@ describe('agent model providers', () => {
       requestedProvider: string
       activeProvider: string
       usingFallback: boolean
-      canConfigure: boolean
+      fallbackReason: string | null
+      source: string
+      hasApiKey: boolean
       providers: Array<{ id: string; defaultModel: string }>
     }
     expect(body.requestedProvider).toBe('deepseek')
     expect(body.activeProvider).toBe('stub')
     expect(body.usingFallback).toBe(true)
-    expect(body.canConfigure).toBe(true)
-    expect(body.providers.map((item: { id: string }) => item.id)).toEqual([
-      'deepseek',
-      'openai',
-      'ollama',
-      'openai-compatible',
-      'stub',
-    ])
+    expect(body.fallbackReason).toBe('missing_api_key')
+    expect(body.source).toBe('env')
+    expect(body.hasApiKey).toBe(false)
+    expect(body.providers.map((item) => item.id)).toEqual(['deepseek'])
     expect(body.providers[0]?.defaultModel).toBe('deepseek-v4-flash')
   })
 
-  it('lets the owner switch the household provider', async () => {
+  it('does not allow switching the model over HTTP', async () => {
     const { app } = await createTestApp()
     const { cookie } = await login(app)
     const updated = await app.request('/api/v1/agent/model', {
       method: 'PUT',
       headers: jsonHeaders(cookie),
-      body: JSON.stringify({ provider: 'ollama', model: 'qwen2.5', baseUrl: 'http://127.0.0.1:11434/v1' }),
+      body: JSON.stringify({ provider: 'ollama' }),
     })
-    expect(updated.status).toBe(200)
-    const body = (await updated.json()) as {
-      requestedProvider: string
-      activeProvider: string
-      source: string
-      model: string
-    }
-    expect(body.requestedProvider).toBe('ollama')
-    expect(body.activeProvider).toBe('ollama')
-    expect(body.source).toBe('household')
-    expect(body.model).toBe('qwen2.5')
-
-    const again = await app.request('/api/v1/agent/model', { headers: { Cookie: cookie } })
-    expect(((await again.json()) as { requestedProvider: string }).requestedProvider).toBe('ollama')
+    expect(updated.status).toBe(404)
   })
 
-  it('still uses stub tools after switching the configured provider to stub', async () => {
+  it('falls back to stub tools when DeepSeek has no key', async () => {
     const { app, db } = await createTestApp()
-    const { cookie } = await login(app)
-    await app.request('/api/v1/agent/model', {
-      method: 'PUT',
-      headers: jsonHeaders(cookie),
-      body: JSON.stringify({ provider: 'stub' }),
-    })
-    const run = await app.request('/api/v1/agent/runs', {
-      method: 'POST',
-      headers: jsonHeaders(cookie),
-      body: JSON.stringify({ message: '帮我登记一个叫爸爸的人' }),
-    })
-    expect(run.status).toBe(201)
-    const rows = db.select().from(people).all()
-    expect(rows.some((row) => row.name === '爸爸')).toBe(true)
-  })
-
-  it('falls back to stub tools when default DeepSeek has no key', async () => {
-    const { app, db } = await createTestApp({ AGENT_MODEL_PROVIDER: 'deepseek' })
     const { cookie } = await login(app)
     const run = await app.request('/api/v1/agent/runs', {
       method: 'POST',

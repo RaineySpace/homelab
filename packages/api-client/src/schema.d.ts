@@ -2913,85 +2913,7 @@ export interface paths {
                 };
             };
         };
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description 更换模型 */
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["UpdateAgentModelRequest"];
-                };
-            };
-            responses: {
-                /** @description 已保存 */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AgentModel"];
-                    };
-                };
-                /** @description 未登录 */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["Problem"];
-                    };
-                };
-                /** @description 没有权限 */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["Problem"];
-                    };
-                };
-                /** @description 不存在 */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["Problem"];
-                    };
-                };
-                /** @description 冲突 */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["Problem"];
-                    };
-                };
-                /** @description 校验失败 */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["Problem"];
-                    };
-                };
-                /** @description 服务器错误 */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["Problem"];
-                    };
-                };
-            };
-        };
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -3225,37 +3147,29 @@ export interface components {
             message: string;
         };
         AgentModel: {
-            requestedProvider: components["schemas"]["AgentModelProviderId"];
+            /** @enum {string} */
+            requestedProvider: "deepseek";
             activeProvider: components["schemas"]["AgentModelProviderId"];
             usingFallback: boolean;
             /** @enum {string|null} */
-            fallbackReason: "missing_api_key" | "missing_base_url" | "missing_model" | null;
+            fallbackReason: "missing_api_key" | null;
             model: string;
             baseUrl: string;
             hasApiKey: boolean;
             /** @enum {string} */
-            apiKeySource: "household" | "env" | "none";
-            /** @enum {string} */
-            source: "household" | "env";
-            canConfigure: boolean;
+            source: "env";
             providers: components["schemas"]["AgentModelProvider"][];
         };
         /** @enum {string} */
-        AgentModelProviderId: "deepseek" | "openai" | "ollama" | "openai-compatible" | "stub";
+        AgentModelProviderId: "deepseek" | "stub";
         AgentModelProvider: {
-            id: components["schemas"]["AgentModelProviderId"];
+            /** @enum {string} */
+            id: "deepseek";
             label: string;
-            protocol: string;
             defaultModel: string;
             defaultBaseUrl: string;
             suggestedModels: string[];
             requiresApiKey: boolean;
-        };
-        UpdateAgentModelRequest: {
-            provider: components["schemas"]["AgentModelProviderId"];
-            model?: string | null;
-            baseUrl?: string | null;
-            apiKey?: string | null;
         };
     };
     responses: never;

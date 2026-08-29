@@ -19,4 +19,5 @@
 | 复杂日历 / 通知推送 | 任务提醒成为刚需时 |
 | `packages/domain` 前后端共享 | 永不作为默认；仅当存在无服务端能力的纯常量 |
 | Orval / 完整设计系统 | Web 对生成 hooks / 组件库有明确痛点时 |
-| 独立 LiteLLM / Portkey 网关进程 | 多个应用共用模型路由、预算或虚拟 Key 时；当前可用 `openai-compatible` 接入已有网关 |
+| 独立 LiteLLM / Portkey 网关进程 | 多个应用共用模型路由、预算或虚拟 Key 时 |
+| 多供应商切换（OpenAI / Ollama / OpenAI 兼容端点） | 家庭明确需要非 DeepSeek 模型时 |

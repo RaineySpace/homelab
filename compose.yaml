@@ -34,19 +34,9 @@ services:
       BOOTSTRAP_ADMIN_PASSWORD: changeme
       BOOTSTRAP_HOUSEHOLD_NAME: 默认家庭
       PUBLIC_ORIGIN: http://localhost:8080
-      AGENT_MODEL_PROVIDER: ${AGENT_MODEL_PROVIDER:-deepseek}
-      AGENT_FALLBACK_PROVIDER: ${AGENT_FALLBACK_PROVIDER:-stub}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
       DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-v4-flash}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
-      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
-      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://127.0.0.1:11434/v1}
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5}
-      AGENT_BASE_URL: ${AGENT_BASE_URL:-}
-      AGENT_API_KEY: ${AGENT_API_KEY:-}
-      AGENT_MODEL: ${AGENT_MODEL:-}
       SESSION_SECRET: ${SESSION_SECRET:-dev-session-secret-change-me}
     volumes:
       - family-data:/data

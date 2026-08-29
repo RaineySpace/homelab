@@ -29,10 +29,3 @@ export interface ModelGateway {
 }
 
 export type FetchLike = typeof fetch
-
-export type HouseholdModelOverride = {
-  provider: string | null
-  model: string | null
-  baseUrl: string | null
-  apiKey: string | null
-}

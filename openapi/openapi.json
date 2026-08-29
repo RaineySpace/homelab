@@ -1062,7 +1062,10 @@
         "type": "object",
         "properties": {
           "requestedProvider": {
-            "$ref": "#/components/schemas/AgentModelProviderId"
+            "type": "string",
+            "enum": [
+              "deepseek"
+            ]
           },
           "activeProvider": {
             "$ref": "#/components/schemas/AgentModelProviderId"
@@ -1077,8 +1080,6 @@
             ],
             "enum": [
               "missing_api_key",
-              "missing_base_url",
-              "missing_model",
               null
             ]
           },
@@ -1091,23 +1092,11 @@
           "hasApiKey": {
             "type": "boolean"
           },
-          "apiKeySource": {
-            "type": "string",
-            "enum": [
-              "household",
-              "env",
-              "none"
-            ]
-          },
           "source": {
             "type": "string",
             "enum": [
-              "household",
               "env"
             ]
-          },
-          "canConfigure": {
-            "type": "boolean"
           },
           "providers": {
             "type": "array",
@@ -1124,9 +1113,7 @@
           "model",
           "baseUrl",
           "hasApiKey",
-          "apiKeySource",
           "source",
-          "canConfigure",
           "providers"
         ],
         "additionalProperties": false
@@ -1135,9 +1122,6 @@
         "type": "string",
         "enum": [
           "deepseek",
-          "openai",
-          "ollama",
-          "openai-compatible",
           "stub"
         ]
       },
@@ -1145,12 +1129,12 @@
         "type": "object",
         "properties": {
           "id": {
-            "$ref": "#/components/schemas/AgentModelProviderId"
+            "type": "string",
+            "enum": [
+              "deepseek"
+            ]
           },
           "label": {
-            "type": "string"
-          },
-          "protocol": {
             "type": "string"
           },
           "defaultModel": {
@@ -1172,45 +1156,10 @@
         "required": [
           "id",
           "label",
-          "protocol",
           "defaultModel",
           "defaultBaseUrl",
           "suggestedModels",
           "requiresApiKey"
-        ],
-        "additionalProperties": false
-      },
-      "UpdateAgentModelRequest": {
-        "type": "object",
-        "properties": {
-          "provider": {
-            "$ref": "#/components/schemas/AgentModelProviderId"
-          },
-          "model": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "minLength": 1,
-            "maxLength": 120
-          },
-          "baseUrl": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "maxLength": 500
-          },
-          "apiKey": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "maxLength": 500
-          }
-        },
-        "required": [
-          "provider"
         ],
         "additionalProperties": false
       }
@@ -4074,93 +4023,6 @@
         "responses": {
           "200": {
             "description": "当前模型",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AgentModel"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "未登录",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "没有权限",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "不存在",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "冲突",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "校验失败",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "服务器错误",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "Agent"
-        ],
-        "requestBody": {
-          "description": "更换模型",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateAgentModelRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "已保存",
             "content": {
               "application/json": {
                 "schema": {

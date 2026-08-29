@@ -32,7 +32,7 @@ Server Action → Generated API Client → Hono API
 
 - SQLite 连接与迁移
 - 本地 `/data/files`
-- ModelGateway / Provider Registry（默认 DeepSeek，可更换）
+- ModelGateway（AI SDK DeepSeek；无 Key 时 Stub）
 - Agent 系统提示词与工具执行
 - 家庭权限与审计
 - OpenAPI 生成

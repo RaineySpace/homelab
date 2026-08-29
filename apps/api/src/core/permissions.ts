@@ -22,21 +22,15 @@ export const PERMISSIONS = [
   'tasks:complete',
   'agent:run',
   'agent:approve',
-  'agent:configure',
 ] as const
 
 export type Permission = (typeof PERMISSIONS)[number]
 
-const OWNER_ONLY: Permission[] = ['agent:configure']
-
-const MEMBER: Permission[] = PERMISSIONS.filter((item) => !OWNER_ONLY.includes(item))
-
 const VIEWER: Permission[] = PERMISSIONS.filter((item) => item.endsWith(':read'))
 
 export function permissionsForRole(role: Role): Permission[] {
-  if (role === 'owner') return [...PERMISSIONS]
-  if (role === 'member') return MEMBER
-  return VIEWER
+  if (role === 'viewer') return VIEWER
+  return [...PERMISSIONS]
 }
 
 export type RequestIdentity = {

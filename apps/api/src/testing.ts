@@ -14,7 +14,6 @@ export async function createTestApp(envOverrides: Record<string, string> = {}) {
     BOOTSTRAP_HOUSEHOLD_NAME: '默认家庭',
     PUBLIC_ORIGIN: 'http://family.example.com',
     NODE_ENV: 'test',
-    AGENT_MODEL_PROVIDER: 'stub',
     ...envOverrides,
   })
   const sqlite = createSqlite(env)
