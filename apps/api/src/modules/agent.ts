@@ -372,7 +372,7 @@ export function agentRoutes() {
           })) {
             await stream.writeSSE({ event: event.type, data: JSON.stringify(event) })
           }
-        })
+        }) as never
       }
       for await (const _event of runAgent({
         db,

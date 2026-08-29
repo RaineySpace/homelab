@@ -35,11 +35,11 @@
 | [P13](./P13-verification.md) | 首期验收与回归 | 验收 | 已完成 | P02–P12 |
 | [P14](./P14-agent-model-providers.md) | Agent 模型可更换（默认 DeepSeek） | 业务 | 已完成 | P09 |
 | [P15](./P15-agent-deepseek-env.md) | Agent 首期仅 DeepSeek（AI SDK + 环境变量） | 业务 | 已完成 | P14 |
-| [P16](./P16-docker-env.md) | Docker 部署订正与环境变量合并 | 部署 | 正在执行 | P12, P15 |
+| [P16](./P16-docker-env.md) | Docker 部署订正与环境变量合并 | 部署 | 已完成 | P12, P15 |
 
 ## 统计
 
-- 已完成：16
-- 正在执行：1
+- 已完成：17
+- 正在执行：0
 - 未完成：0
 - 已阻塞：0

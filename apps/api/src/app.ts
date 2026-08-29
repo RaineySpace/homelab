@@ -23,7 +23,7 @@ export function createApp(options: { env: Env; db: Db }) {
         throw Errors.validation(
           '请求参数校验失败',
           issues.map((issue) => ({
-            path: [...issue.path],
+            path: issue.path.map((segment) => (typeof segment === 'symbol' ? String(segment) : segment)),
             code: String(issue.code),
             message: issue.message,
           })),

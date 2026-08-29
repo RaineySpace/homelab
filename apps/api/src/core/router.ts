@@ -9,7 +9,7 @@ export function createRouter() {
         throw Errors.validation(
           '请求参数校验失败',
           result.error.issues.map((issue) => ({
-            path: [...issue.path],
+            path: issue.path.map((segment) => (typeof segment === 'symbol' ? String(segment) : segment)),
             code: String(issue.code),
             message: issue.message,
           })),
