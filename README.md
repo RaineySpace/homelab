@@ -24,7 +24,7 @@ pnpm dev
 - Web: http://127.0.0.1:3000
 - API: http://127.0.0.1:3001
 - OpenAPI: http://127.0.0.1:3001/api/v1/openapi.json
-- 默认账号：`admin` / `changeme`（见 `.env.example`）
+- 本地开发默认账号：`admin` / `changeme`（见 `.env.example`）；生产环境不会用该密码创建账号，并会在升级时检测和轮换旧默认密码
 - Agent 密钥：`DEEPSEEK_API_KEY` 只从环境变量读取（优先级：进程环境 > `ENV_FILE` > `.env.local` > `.env`）
 
 ## 常用命令
@@ -41,6 +41,7 @@ pnpm dev
 ```bash
 cp .env.example .env
 cp .env.local.example .env.local
+# 在 .env 中替换 BOOTSTRAP_ADMIN_PASSWORD
 docker compose up --build
 ```
 

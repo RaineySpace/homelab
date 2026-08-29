@@ -15,7 +15,6 @@ const EnvSchema = z.object({
     .default('false')
     .transform((value) => value === 'true'),
   SESSION_TTL_DAYS: z.coerce.number().int().positive().default(30),
-  SESSION_SECRET: z.string().min(8).default('dev-session-secret-change-me'),
   BOOTSTRAP_ADMIN_USERNAME: z.string().min(1).default('admin'),
   BOOTSTRAP_ADMIN_PASSWORD: z.string().min(1).default('changeme'),
   BOOTSTRAP_HOUSEHOLD_NAME: z.string().min(1).default('默认家庭'),
@@ -120,7 +119,6 @@ export const testEnv = (): Env =>
   loadEnv({
     DATA_DIR: ':memory:',
     COOKIE_SECURE: 'false',
-    SESSION_SECRET: 'test-session-secret-change-me',
     BOOTSTRAP_ADMIN_USERNAME: 'admin',
     BOOTSTRAP_ADMIN_PASSWORD: 'changeme',
     BOOTSTRAP_HOUSEHOLD_NAME: '默认家庭',

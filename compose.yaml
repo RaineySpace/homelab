@@ -2,7 +2,7 @@ services:
   reverse-proxy:
     image: caddy:2.10-alpine
     ports:
-      - "8080:80"
+      - "${COMPOSE_BIND_ADDRESS:-127.0.0.1}:8080:80"
     volumes:
       - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
     depends_on:

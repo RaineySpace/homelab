@@ -61,4 +61,8 @@ BOOTSTRAP_ADMIN_PASSWORD=changeme
 BOOTSTRAP_HOUSEHOLD_NAME=默认家庭
 ```
 
-生产必须改掉默认密码。
+`admin` / `changeme` 只用于本地开发。`NODE_ENV=production` 首次建库时，API 要求 `BOOTSTRAP_ADMIN_PASSWORD` 至少 12 位且不能使用默认值；不满足就拒绝启动。
+
+升级已有数据库时，如果账号仍使用 `changeme`，启动阶段会要求提供合格的 `BOOTSTRAP_ADMIN_PASSWORD`，自动轮换密码并撤销该账号的全部旧会话。已经使用非默认密码的账号不会被环境变量覆盖。
+
+当前会话使用随机令牌，数据库只保存 SHA-256 哈希，不依赖全局 `SESSION_SECRET`。

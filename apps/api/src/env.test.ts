@@ -80,7 +80,6 @@ describe('env files', () => {
   it('parses DeepSeek env defaults without other providers', () => {
     const env = loadEnv({
       DATA_DIR: ':memory:',
-      SESSION_SECRET: 'test-session-secret-change-me',
       NODE_ENV: 'test',
     })
     expect(env.DEEPSEEK_MODEL).toBe('deepseek-v4-flash')

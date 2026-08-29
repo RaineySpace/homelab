@@ -8,7 +8,6 @@ export async function createTestApp(envOverrides: Record<string, string> = {}) {
   const env = loadEnv({
     DATA_DIR: ':memory:',
     COOKIE_SECURE: 'false',
-    SESSION_SECRET: 'test-session-secret-change-me',
     BOOTSTRAP_ADMIN_USERNAME: 'admin',
     BOOTSTRAP_ADMIN_PASSWORD: 'changeme',
     BOOTSTRAP_HOUSEHOLD_NAME: '默认家庭',

@@ -9,7 +9,6 @@ function env(overrides: Record<string, string> = {}) {
   return loadEnv({
     DATA_DIR: ':memory:',
     COOKIE_SECURE: 'false',
-    SESSION_SECRET: 'test-session-secret-change-me',
     NODE_ENV: 'test',
     ...overrides,
   })

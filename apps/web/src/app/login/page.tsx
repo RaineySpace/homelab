@@ -28,14 +28,14 @@ export default function LoginPage() {
     <div className="login">
       <form className="panel grid" method="post" onSubmit={onSubmit}>
         <h1>登录家庭</h1>
-        <p className="muted">默认账号 admin / changeme，请在生产环境立即修改。</p>
+        <p className="muted">请使用部署时配置的管理员账号登录。</p>
         <label>
           用户名
           <input name="username" defaultValue="admin" autoComplete="username" />
         </label>
         <label>
           密码
-          <input name="password" type="password" defaultValue="changeme" autoComplete="current-password" />
+          <input name="password" type="password" autoComplete="current-password" required />
         </label>
         {error ? <p className="error">{error}</p> : null}
         <button className="btn" type="submit">进入</button>

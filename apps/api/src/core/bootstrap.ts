@@ -1,13 +1,45 @@
 import { eq } from 'drizzle-orm'
 import { createId, nowIso } from './ids.js'
-import { hashPassword } from './crypto.js'
-import { accounts, households } from './database/schema.js'
+import { hashPassword, verifyPassword } from './crypto.js'
+import { accounts, households, sessions } from './database/schema.js'
 import type { Db } from './database/client.js'
 import type { Env } from '../env.js'
 
+const developmentAdminPassword = 'changeme'
+
+function assertSecureProductionBootstrapPassword(env: Env): void {
+  if (env.NODE_ENV !== 'production') return
+  if (
+    env.BOOTSTRAP_ADMIN_PASSWORD === developmentAdminPassword ||
+    env.BOOTSTRAP_ADMIN_PASSWORD.length < 12
+  ) {
+    throw new Error('生产环境必须设置至少 12 位且不为默认值的 BOOTSTRAP_ADMIN_PASSWORD')
+  }
+}
+
 export function bootstrapHousehold(db: Db, env: Env): void {
-  const existing = db.select({ id: accounts.id }).from(accounts).limit(1).get()
-  if (existing) return
+  const existing = db.select({ id: accounts.id, passwordHash: accounts.passwordHash }).from(accounts).all()
+  if (existing.length > 0) {
+    const accountsUsingDevelopmentPassword = existing.filter((account) =>
+      verifyPassword(developmentAdminPassword, account.passwordHash),
+    )
+    if (env.NODE_ENV === 'production' && accountsUsingDevelopmentPassword.length > 0) {
+      assertSecureProductionBootstrapPassword(env)
+      const at = nowIso()
+      db.transaction((tx) => {
+        for (const account of accountsUsingDevelopmentPassword) {
+          tx.update(accounts)
+            .set({ passwordHash: hashPassword(env.BOOTSTRAP_ADMIN_PASSWORD), updatedAt: at })
+            .where(eq(accounts.id, account.id))
+            .run()
+          tx.delete(sessions).where(eq(sessions.accountId, account.id)).run()
+        }
+      })
+    }
+    return
+  }
+
+  assertSecureProductionBootstrapPassword(env)
   const at = nowIso()
   const householdId = createId('hh')
   const accountId = createId('acct')
