@@ -41,7 +41,7 @@ Database
 
 首期只接 **DeepSeek**（默认 `deepseek-v4-flash`），通过 Vercel AI SDK 的 `@ai-sdk/deepseek` 调用。密钥只从环境变量 `DEEPSEEK_API_KEY` 读取，不经 Web、不入库。
 
-加载顺序：已有进程环境（Docker / shell）> `.env.local` > `.env`。根目录与 `apps/api` 都会扫描。
+加载顺序：已有进程环境（Docker / shell）> `ENV_FILE` > `.env.local` > `.env`。容器约定还会读 `/app/.env`；根目录与 `apps/api` 都会扫描。跳过误挂成目录的文件。
 
 未配置 Key 时回落到 `stub`，工具仍走同一套 Command。
 
