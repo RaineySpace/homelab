@@ -1,15 +1,22 @@
+import type Database from 'better-sqlite3'
 import type { FamilyApp } from './app.js'
 import { createApp } from './app.js'
-import { applyMigrations, createDb, createSqlite } from './core/database/client.js'
+import { applyMigrations, createDb, createSqlite, type Db } from './core/database/client.js'
 import { bootstrapHousehold } from './core/bootstrap.js'
-import { loadEnv } from './env.js'
+import { loadEnv, type Env } from './env.js'
 
-export async function createTestApp(envOverrides: Record<string, string> = {}) {
+export async function createTestApp(envOverrides: Record<string, string> = {}): Promise<{
+  app: FamilyApp
+  db: Db
+  sqlite: Database.Database
+  env: Env
+}> {
   const env = loadEnv({
     DATA_DIR: ':memory:',
     COOKIE_SECURE: 'false',
     BOOTSTRAP_ADMIN_USERNAME: 'admin',
     BOOTSTRAP_ADMIN_PASSWORD: 'changeme',
+    BOOTSTRAP_ADMIN_PERSON_NAME: '管理员',
     BOOTSTRAP_HOUSEHOLD_NAME: '默认家庭',
     PUBLIC_ORIGIN: 'http://family.example.com',
     NODE_ENV: 'test',

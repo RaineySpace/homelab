@@ -35,12 +35,24 @@ export function createDb(sqlite: Database.Database): Db {
 }
 
 export function applyMigrations(sqlite: Database.Database): void {
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      name TEXT PRIMARY KEY,
+      applied_at TEXT NOT NULL
+    )
+  `)
   const dir = join(here, '../../../drizzle')
   const files = readdirSync(dir)
     .filter((name) => /^\d+_.*\.sql$/.test(name))
     .sort()
+  const applied = sqlite.prepare('SELECT 1 FROM schema_migrations WHERE name = ?')
+  const record = sqlite.prepare('INSERT INTO schema_migrations (name, applied_at) VALUES (?, ?)')
   for (const file of files) {
-    sqlite.exec(readFileSync(join(dir, file), 'utf8'))
+    if (applied.get(file)) continue
+    sqlite.transaction(() => {
+      sqlite.exec(readFileSync(join(dir, file), 'utf8'))
+      record.run(file, new Date().toISOString())
+    })()
   }
 }
 

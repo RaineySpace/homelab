@@ -25,6 +25,7 @@ pnpm dev
 - API: http://127.0.0.1:3001
 - OpenAPI: http://127.0.0.1:3001/api/v1/openapi.json
 - 本地开发默认账号：`admin` / `changeme`（见 `.env.example`）；生产环境不会用该密码创建账号，并会在升级时检测和轮换旧默认密码
+- owner 首次创建时会同步创建由 `BOOTSTRAP_ADMIN_PERSON_NAME` 指定的家庭人物；登录后可在 `/accounts` 管理 member/viewer
 - Agent 密钥：`DEEPSEEK_API_KEY` 只从环境变量读取（优先级：进程环境 > `ENV_FILE` > `.env.local` > `.env`）
 
 ## 常用命令
@@ -35,6 +36,7 @@ pnpm dev
 | `pnpm test` | 跑 API 集成测试 |
 | `pnpm openapi:export` | 从 Hono 导出 OpenAPI |
 | `pnpm openapi:generate` | 生成 `packages/api-client` 类型 |
+| `pnpm --filter @family-os/api owner:reset-password` | 在交互式 TTY 中恢复唯一 owner 的密码 |
 
 ## 部署
 

@@ -1,14 +1,15 @@
 import { createHash } from 'node:crypto'
-import { and, eq, gt } from 'drizzle-orm'
+import { and, eq, gt, isNull, ne } from 'drizzle-orm'
 import { createRoute, z } from '@hono/zod-openapi'
 import { createRouter } from '../core/router.js'
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie'
-import { accounts, sessions } from '../core/database/schema.js'
+import { accounts, people, sessions } from '../core/database/schema.js'
 import { createId, nowIso } from '../core/ids.js'
-import { hashToken, randomToken, verifyPassword } from '../core/crypto.js'
+import { hashPassword, hashToken, randomToken, verifyPassword } from '../core/crypto.js'
 import { Errors } from '../core/errors.js'
 import { errorResponses, jsonContent } from '../core/openapi.js'
 import { permissionsForRole, type RequestIdentity, type Role } from '../core/permissions.js'
+import { writeAudit } from '../core/audit.js'
 import type { Db } from '../core/database/client.js'
 import type { Env } from '../env.js'
 
@@ -29,8 +30,16 @@ const SessionResponseSchema = z
     role: z.enum(['owner', 'member', 'viewer']),
     permissions: z.array(z.string()),
     authMethod: z.enum(['cookie', 'bearer']),
+    person: z.strictObject({ id: z.string(), name: z.string() }),
   })
   .openapi('SessionResponse')
+
+const ChangePasswordRequestSchema = z
+  .strictObject({
+    currentPassword: z.string().min(1).max(200),
+    newPassword: z.string().min(12).max(200),
+  })
+  .openapi('ChangePasswordRequest')
 
 export function createSession(db: Db, accountId: string, ttlDays: number) {
   const token = randomToken()
@@ -63,10 +72,20 @@ export function identityFromToken(
       householdId: accounts.householdId,
       username: accounts.username,
       role: accounts.role,
+      personId: people.id,
+      personName: people.name,
     })
     .from(sessions)
     .innerJoin(accounts, eq(sessions.accountId, accounts.id))
-    .where(and(eq(sessions.tokenHash, tokenHash), gt(sessions.expiresAt, nowIso())))
+    .innerJoin(people, eq(accounts.personId, people.id))
+    .where(
+      and(
+        eq(sessions.tokenHash, tokenHash),
+        gt(sessions.expiresAt, nowIso()),
+        isNull(accounts.disabledAt),
+        isNull(people.archivedAt),
+      ),
+    )
     .get()
   if (!row) return null
   const role = row.role as Role
@@ -78,6 +97,7 @@ export function identityFromToken(
     role,
     permissions: permissionsForRole(role),
     authMethod,
+    person: { id: row.personId, name: row.personName },
   }
 }
 
@@ -115,6 +135,7 @@ function toSession(identity: RequestIdentity) {
     role: identity.role,
     permissions: identity.permissions,
     authMethod: identity.authMethod,
+    person: identity.person,
   }
 }
 
@@ -140,7 +161,20 @@ export function identityRoutes() {
       const db = c.get('db')
       const env = c.get('env') as Env
       const account = db.select().from(accounts).where(eq(accounts.username, body.username)).get()
-      if (!account || !verifyPassword(body.password, account.passwordHash)) {
+      const person = account?.personId
+        ? db
+            .select({ id: people.id })
+            .from(people)
+            .where(
+              and(
+                eq(people.id, account.personId),
+                eq(people.householdId, account.householdId),
+                isNull(people.archivedAt),
+              ),
+            )
+            .get()
+        : undefined
+      if (!account || account.disabledAt || !person || !verifyPassword(body.password, account.passwordHash)) {
         throw Errors.unauthorized()
       }
       const session = createSession(db, account.id, env.SESSION_TTL_DAYS)
@@ -187,6 +221,49 @@ export function identityRoutes() {
       },
     }),
     (c) => c.json(toSession(c.get('identity')), 200),
+  )
+
+  routes.openapi(
+    createRoute({
+      method: 'post',
+      path: '/auth/password/change',
+      tags: ['Identity'],
+      request: { body: jsonContent(ChangePasswordRequestSchema, '修改当前账号密码') },
+      responses: {
+        204: { description: '密码已修改' },
+        401: errorResponses[401],
+        422: errorResponses[422],
+      },
+    }),
+    (c) => {
+      const body = c.req.valid('json')
+      const identity = c.get('identity')
+      const db = c.get('db')
+      const account = db.select().from(accounts).where(eq(accounts.id, identity.accountId)).get()
+      if (!account || !verifyPassword(body.currentPassword, account.passwordHash)) {
+        throw Errors.unauthorized()
+      }
+      if (verifyPassword(body.newPassword, account.passwordHash)) {
+        throw Errors.validation('新密码不能与当前密码相同', [
+          { path: ['newPassword'], code: 'password_unchanged', message: '请输入不同的新密码' },
+        ])
+      }
+      db.transaction((tx) => {
+        tx.update(accounts)
+          .set({ passwordHash: hashPassword(body.newPassword), updatedAt: nowIso() })
+          .where(eq(accounts.id, identity.accountId))
+          .run()
+        tx.delete(sessions)
+          .where(and(eq(sessions.accountId, identity.accountId), ne(sessions.id, identity.sessionId)))
+          .run()
+      })
+      writeAudit(
+        db,
+        { identity, requestId: c.get('requestId'), source: 'manual' },
+        { command: 'auth.password_change', entityType: 'account', entityId: identity.accountId },
+      )
+      return c.body(null, 204)
+    },
   )
 
   return routes

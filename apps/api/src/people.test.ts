@@ -12,7 +12,7 @@ describe('people commands', () => {
       body: JSON.stringify({ name: '妈妈', birth: { year: 1988, month: 5 }, sex: 'female' }),
     })
     expect(created.status).toBe(201)
-    const person = await created.json()
+    const person = (await created.json()) as any
     expect(person.name).toBe('妈妈')
     expect(person.version).toBe(1)
 
@@ -22,7 +22,7 @@ describe('people commands', () => {
       body: JSON.stringify({ name: '妈妈', birth: { year: 1988, month: 5 }, sex: 'female' }),
     })
     expect(replay.status).toBe(201)
-    expect((await replay.json()).id).toBe(person.id)
+    expect(((await replay.json()) as any).id).toBe(person.id)
 
     const conflictKey = await app.request('/api/v1/people', {
       method: 'POST',
@@ -44,7 +44,7 @@ describe('people commands', () => {
       body: JSON.stringify({ version: 99, name: '母亲' }),
     })
     expect(stale.status).toBe(409)
-    expect((await stale.json()).code).toBe('ENTITY_VERSION_CONFLICT')
+    expect(((await stale.json()) as any).code).toBe('ENTITY_VERSION_CONFLICT')
 
     const updated = await app.request(`/api/v1/people/${person.id}`, {
       method: 'PATCH',
@@ -52,13 +52,13 @@ describe('people commands', () => {
       body: JSON.stringify({ version: 1, name: '母亲' }),
     })
     expect(updated.status).toBe(200)
-    expect((await updated.json()).version).toBe(2)
+    expect(((await updated.json()) as any).version).toBe(2)
 
     const revisions = await app.request(`/api/v1/people/${person.id}/revisions`, {
       headers: { Cookie: cookie },
     })
     expect(revisions.status).toBe(200)
-    const history = await revisions.json()
+    const history = (await revisions.json()) as any[]
     expect(history[0].snapshot.name).toBe('妈妈')
 
     const archived = await app.request(`/api/v1/people/${person.id}`, {
@@ -67,6 +67,6 @@ describe('people commands', () => {
     })
     expect(archived.status).toBe(200)
     const list = await app.request('/api/v1/people', { headers: { Cookie: cookie } })
-    expect(await list.json()).toEqual([])
+    expect(((await list.json()) as any[]).some((item: { id: string }) => item.id === person.id)).toBe(false)
   })
 })

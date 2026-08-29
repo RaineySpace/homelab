@@ -35,6 +35,7 @@ HTTP Request → SSE → ModelGateway（AI SDK DeepSeek；无 Key 时 Stub）→
 cp .env.example .env
 cp .env.local.example .env.local
 # 在 .env 中替换 BOOTSTRAP_ADMIN_PASSWORD
+# 按家庭称谓设置 BOOTSTRAP_ADMIN_PERSON_NAME
 # 在 .env.local 填入 DEEPSEEK_API_KEY（可选；不填则 Agent 走 Stub）
 docker compose up --build
 ```
@@ -42,10 +43,21 @@ docker compose up --build
 - 入口：`http://localhost:8080`（默认只绑定 `127.0.0.1`）
 - 健康检查：`GET http://localhost:8080/api/v1/health`
 - 生产首次建库必须设置至少 12 位的 `BOOTSTRAP_ADMIN_PASSWORD`，且不能使用 `.env.example` 中的开发默认值
+- `BOOTSTRAP_ADMIN_PERSON_NAME` 用于首次创建 owner 人物，也用于升级时匹配尚未关联人物的 owner
 
 compose 的 `env_file` 仍设为 `required: false`，但生产环境首次建库或检测到旧默认密码时，缺少合格凭据会让 API 拒绝启动。
 
 已有数据库若仍在使用 `changeme`，升级后需先在 `.env` 设置新的强密码；API 会在启动时轮换密码并撤销旧会话。已经改过密码的数据库不会被 `BOOTSTRAP_ADMIN_PASSWORD` 再次覆盖。
+
+升级会通过 `schema_migrations` 只执行一次账号字段和索引迁移。启动要求恰好一个 owner；遗留普通账号若未关联有效人物会被停用并撤销会话，待 owner 在 `/accounts` 完成关联后再启用。
+
+忘记 owner 密码时，在挂载同一 `DATA_DIR` 且可交互的 API 运行环境执行：
+
+```bash
+pnpm --filter @family-os/api owner:reset-password
+```
+
+命令隐藏读取两次新密码，不支持明文参数；成功后会撤销 owner 全部旧会话。
 
 需要让家庭局域网中的其他设备访问时，可在 `.env` 设置 `COMPOSE_BIND_ADDRESS=0.0.0.0`；此时必须同时使用强凭据，并通过宿主机防火墙限制可信网段。公网访问应另行配置 HTTPS 和受控入口，不要直接暴露该端口。
 

@@ -13,7 +13,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "openapi:export": "tsx src/scripts/export-openapi.ts"
+    "openapi:export": "tsx src/scripts/export-openapi.ts",
+    "owner:reset-password": "tsx src/scripts/reset-owner-password.ts"
   },
   "dependencies": {
     "@ai-sdk/deepseek": "^3.0.36",

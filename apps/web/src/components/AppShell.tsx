@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { api } from '@/lib/api'
 
 const links = [
@@ -16,6 +17,22 @@ const links = [
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
+  const [role, setRole] = useState<'owner' | 'member' | 'viewer' | null>(null)
+
+  useEffect(() => {
+    let active = true
+    api<{ role: 'owner' | 'member' | 'viewer' }>('/auth/session')
+      .then((session) => {
+        if (active) setRole(session.role)
+      })
+      .catch(() => {
+        if (active) router.push('/login')
+      })
+    return () => {
+      active = false
+    }
+  }, [router])
+
   return (
     <div className="shell">
       <aside className="side">
@@ -26,6 +43,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {label}
             </Link>
           ))}
+          {role === 'owner' ? (
+            <Link href="/accounts" className={pathname === '/accounts' ? 'active' : undefined}>
+              账号
+            </Link>
+          ) : null}
+          <Link href="/settings" className={pathname === '/settings' ? 'active' : undefined}>
+            设置
+          </Link>
           <button
             type="button"
             onClick={async () => {

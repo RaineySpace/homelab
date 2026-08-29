@@ -36,3 +36,5 @@
 ## ORM
 
 Drizzle 只出现在 `apps/api` 的 infrastructure。Application 依赖 Repository 接口，不依赖 Drizzle 类型泄露到 HTTP 层。
+
+SQL migration 文件按名称排序执行，并记录在 `schema_migrations`；同一 migration 不会在后续启动中重复执行。每个文件的 SQL 与迁移记录写入同一 SQLite 事务。

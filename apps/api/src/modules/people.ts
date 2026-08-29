@@ -1,7 +1,7 @@
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, isNull } from 'drizzle-orm'
 import { createRoute, z } from '@hono/zod-openapi'
 import { createRouter } from '../core/router.js'
-import { people, personRevisions } from '../core/database/schema.js'
+import { accounts, people, personRevisions } from '../core/database/schema.js'
 import { PartialBirthDateSchema, SexSchema, type PartialBirthDate, type Sex } from '../core/dates.js'
 import { Errors } from '../core/errors.js'
 import { createId, nowIso } from '../core/ids.js'
@@ -204,6 +204,18 @@ export function archivePersonCommand(db: Db, ctx: CommandContext, personId: stri
   requirePerm(ctx, 'people:archive')
   const current = getPersonCommand(db, ctx, personId)
   if (current.archivedAt) return current
+  const activeAccount = db
+    .select({ id: accounts.id })
+    .from(accounts)
+    .where(and(eq(accounts.personId, personId), isNull(accounts.disabledAt)))
+    .get()
+  if (activeAccount) {
+    throw Errors.conflict(
+      'PERSON_HAS_ACTIVE_ACCOUNT',
+      '人物关联着启用账号',
+      '请先停用账号或修改账号的人物关联',
+    )
+  }
   const at = nowIso()
   db.update(people)
     .set({ archivedAt: at, updatedAt: at })

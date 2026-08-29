@@ -13,6 +13,8 @@ GET    /api/v1/people/{personId}/revisions
 
 `DELETE` 为归档（`archivedAt`），不是物理删除。列表默认不返回已归档。
 
+绑定启用账号的人物不能归档，接口返回 `409 PERSON_HAS_ACTIVE_ACCOUNT`。普通账号需先停用；owner 需先在账号管理中改绑人物。
+
 ## 字段
 
 - `name`：1–50 字符

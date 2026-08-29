@@ -6,7 +6,7 @@
 
 ## 目标
 
-中文响应式界面：登录、总览、人物、菜谱、配餐、任务、Agent。不访问 SQLite，不持有模型密钥。
+中文响应式界面：登录、总览、人物、菜谱、配餐、任务、Agent、账号管理和密码设置。不访问 SQLite，不持有模型密钥。
 
 ## 验收
 
@@ -15,6 +15,8 @@
 - [x] 可创建菜谱与配餐草稿并确认
 - [x] 可创建任务
 - [x] 可发送 Agent 消息并看到回复（Stub 即可）
+- [x] owner 可在 `/accounts` 管理普通账号，所有用户可在 `/settings` 修改密码
+- [x] 账号导航仅对 owner 可见，API 仍独立执行权限校验
 - [x] `apps/web/package.json` 无 drizzle / better-sqlite3 / 模型 SDK
 
 ## 证据

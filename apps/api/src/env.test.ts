@@ -85,6 +85,7 @@ describe('env files', () => {
     expect(env.DEEPSEEK_MODEL).toBe('deepseek-v4-flash')
     expect(env.DEEPSEEK_BASE_URL).toBe('https://api.deepseek.com')
     expect(env.DEEPSEEK_API_KEY).toBe('')
+    expect(env.BOOTSTRAP_ADMIN_PERSON_NAME).toBe('管理员')
     expect(env).not.toHaveProperty('AGENT_MODEL_PROVIDER')
     expect(env).not.toHaveProperty('OPENAI_API_KEY')
   })

@@ -14,7 +14,7 @@ describe('health and auth', () => {
     const response = await app.request('/api/v1/people')
     expect(response.status).toBe(401)
     expect(response.headers.get('content-type')).toContain('application/problem+json')
-    const body = await response.json()
+    const body = (await response.json()) as any
     expect(body.code).toBe('UNAUTHORIZED')
     expect(body.requestId).toBeTruthy()
   })
@@ -26,9 +26,10 @@ describe('health and auth', () => {
     expect(cookie.startsWith('family_os_session=')).toBe(true)
     const session = await app.request('/api/v1/auth/session', { headers: { Cookie: cookie } })
     expect(session.status).toBe(200)
-    const body = await session.json()
+    const body = (await session.json()) as any
     expect(body.username).toBe('admin')
     expect(body.role).toBe('owner')
+    expect(body.person.name).toBe('管理员')
     expect(body.permissions).toContain('people:create')
   })
 
@@ -56,7 +57,7 @@ describe('health and auth', () => {
       body: JSON.stringify({ name: '' }),
     })
     expect(response.status).toBe(422)
-    const body = await response.json()
+    const body = (await response.json()) as any
     expect(body.code).toBe('VALIDATION_ERROR')
   })
 })

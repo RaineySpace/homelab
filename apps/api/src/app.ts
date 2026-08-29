@@ -11,6 +11,7 @@ import { recipeRoutes } from './modules/recipes.js'
 import { mealRoutes } from './modules/meals.js'
 import { taskRoutes } from './modules/tasks.js'
 import { agentRoutes } from './modules/agent.js'
+import { accountRoutes } from './modules/accounts.js'
 import type { AppEnv } from './app-env.js'
 import type { Db } from './core/database/client.js'
 import type { Env } from './env.js'
@@ -67,6 +68,7 @@ export function createApp(options: { env: Env; db: Db }) {
   v1.route('/', mealRoutes())
   v1.route('/', taskRoutes())
   v1.route('/', agentRoutes())
+  v1.route('/', accountRoutes())
   v1.doc31('/openapi.json', {
     openapi: '3.1.0',
     info: {
@@ -82,6 +84,7 @@ export function createApp(options: { env: Env; db: Db }) {
       { name: 'Meals' },
       { name: 'Tasks' },
       { name: 'Agent' },
+      { name: 'Accounts' },
     ],
   })
 

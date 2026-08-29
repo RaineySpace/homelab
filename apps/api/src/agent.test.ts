@@ -13,15 +13,15 @@ describe('agent tools share commands', () => {
       body: JSON.stringify({ message: '帮我登记一个叫妈妈的人' }),
     })
     expect(run.status).toBe(201)
-    const runBody = await run.json()
+    const runBody = (await run.json()) as any
     expect(['completed', 'failed']).toContain(runBody.status)
     expect(runBody.status).toBe('completed')
 
     const list = await app.request('/api/v1/people', { headers: { Cookie: cookie } })
-    const peopleJson = await list.json()
+    const peopleJson = (await list.json()) as any[]
     expect(peopleJson.some((item: { name: string }) => item.name === '妈妈')).toBe(true)
     const rows = db.select().from(people).all()
-    expect(rows).toHaveLength(1)
+    expect(rows.filter((row) => row.name === '妈妈')).toHaveLength(1)
   })
 
   it('requires confirmation before archiving a person', async () => {
@@ -32,7 +32,7 @@ describe('agent tools share commands', () => {
       headers: jsonHeaders(cookie),
       body: JSON.stringify({ name: '孩子', birth: null, sex: null }),
     })
-    const person = await created.json()
+    const person = (await created.json()) as any
 
     const run = await app.request('/api/v1/agent/runs', {
       method: 'POST',
@@ -42,7 +42,7 @@ describe('agent tools share commands', () => {
     expect(run.status).toBe(201)
 
     const still = await app.request(`/api/v1/people/${person.id}`, { headers: { Cookie: cookie } })
-    expect((await still.json()).archivedAt).toBeNull()
+    expect(((await still.json()) as any).archivedAt).toBeNull()
   })
 })
 

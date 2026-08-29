@@ -10,9 +10,11 @@ export const households = sqliteTable('households', {
 export const accounts = sqliteTable('accounts', {
   id: text('id').primaryKey(),
   householdId: text('household_id').notNull(),
+  personId: text('person_id'),
   username: text('username').notNull(),
   passwordHash: text('password_hash').notNull(),
   role: text('role').notNull(),
+  disabledAt: text('disabled_at'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 })

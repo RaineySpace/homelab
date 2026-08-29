@@ -22,14 +22,21 @@ export const PERMISSIONS = [
   'tasks:complete',
   'agent:run',
   'agent:approve',
+  'accounts:read',
+  'accounts:create',
+  'accounts:update',
+  'accounts:reset-password',
+  'accounts:disable',
 ] as const
 
 export type Permission = (typeof PERMISSIONS)[number]
 
-const VIEWER: Permission[] = PERMISSIONS.filter((item) => item.endsWith(':read'))
+const BUSINESS: Permission[] = PERMISSIONS.filter((item) => !item.startsWith('accounts:'))
+const VIEWER: Permission[] = BUSINESS.filter((item) => item.endsWith(':read'))
 
 export function permissionsForRole(role: Role): Permission[] {
   if (role === 'viewer') return VIEWER
+  if (role === 'member') return BUSINESS
   return [...PERMISSIONS]
 }
 
@@ -41,6 +48,7 @@ export type RequestIdentity = {
   authMethod: 'cookie' | 'bearer'
   role: Role
   username: string
+  person: { id: string; name: string }
 }
 
 export function hasPermission(identity: RequestIdentity, permission: Permission): boolean {

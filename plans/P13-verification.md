@@ -18,7 +18,7 @@
 
 ## 证据
 
-- `pnpm --filter @family-os/api test`：4 files / 10 tests passed
+- `pnpm --filter @family-os/api test` 覆盖认证、账号管理、业务模块与 Agent 回归
 - `openapi/openapi.json` 由 `pnpm openapi:export` 生成；`packages/api-client/src/schema.d.ts` 自动生成
 - Web 不依赖 API 源码；API 不依赖 Web
 - 浏览器登录、人物/菜谱/任务创建；Agent 经同一 Command 创建人物

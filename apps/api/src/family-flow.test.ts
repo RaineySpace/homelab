@@ -11,7 +11,7 @@ describe('recipes, meals, tasks', () => {
       headers: jsonHeaders(cookie),
       body: JSON.stringify({ name: '爸爸', birth: null, sex: 'male' }),
     })
-    const person = await personRes.json()
+    const person = (await personRes.json()) as any
 
     const egg = await app.request('/api/v1/ingredients', {
       method: 'POST',
@@ -19,7 +19,7 @@ describe('recipes, meals, tasks', () => {
       body: JSON.stringify({ name: '鸡蛋', unit: 'piece' }),
     })
     expect(egg.status).toBe(201)
-    const eggBody = await egg.json()
+    const eggBody = (await egg.json()) as any
 
     const dup = await app.request('/api/v1/ingredients', {
       method: 'POST',
@@ -40,7 +40,7 @@ describe('recipes, meals, tasks', () => {
       }),
     })
     expect(recipe.status).toBe(201)
-    const recipeBody = await recipe.json()
+    const recipeBody = (await recipe.json()) as any
 
     const manualFail = await app.request('/api/v1/meal-drafts', {
       method: 'POST',
@@ -67,7 +67,7 @@ describe('recipes, meals, tasks', () => {
       }),
     })
     expect(draft.status).toBe(201)
-    const draftBody = await draft.json()
+    const draftBody = (await draft.json()) as any
     expect(draftBody.recipeIds).toContain(recipeBody.id)
 
     const meal = await app.request(`/api/v1/meal-drafts/${draftBody.id}/confirm`, {
@@ -75,13 +75,13 @@ describe('recipes, meals, tasks', () => {
       headers: jsonHeaders(cookie, { 'Idempotency-Key': 'confirm-1' }),
     })
     expect(meal.status).toBe(200)
-    const mealBody = await meal.json()
+    const mealBody = (await meal.json()) as any
 
     const replay = await app.request(`/api/v1/meal-drafts/${draftBody.id}/confirm`, {
       method: 'POST',
       headers: jsonHeaders(cookie, { 'Idempotency-Key': 'confirm-1' }),
     })
-    expect((await replay.json()).id).toBe(mealBody.id)
+    expect(((await replay.json()) as any).id).toBe(mealBody.id)
 
     const rateEarly = await app.request(`/api/v1/meals/${mealBody.id}/ratings/${person.id}`, {
       method: 'PUT',
@@ -114,12 +114,12 @@ describe('recipes, meals, tasks', () => {
       }),
     })
     expect(task.status).toBe(201)
-    const taskBody = await task.json()
+    const taskBody = (await task.json()) as any
     const done = await app.request(`/api/v1/tasks/${taskBody.id}/complete`, {
       method: 'POST',
       headers: { Cookie: cookie },
     })
-    const doneBody = await done.json()
+    const doneBody = (await done.json()) as any
     expect(doneBody.status).toBe('completed')
     expect(doneBody.completedAt).toBeTruthy()
   })
