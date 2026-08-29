@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parse as parseDotenv } from 'dotenv'
@@ -56,26 +56,51 @@ export function applyEnvFiles(processEnv: NodeJS.ProcessEnv, fileContentsInOrder
   }
 }
 
-export function dotenvFilePaths(options?: { cwd?: string; workspaceRoot?: string }): string[] {
+export function isReadableEnvFile(path: string): boolean {
+  try {
+    return existsSync(path) && statSync(path).isFile()
+  } catch {
+    return false
+  }
+}
+
+export function dotenvFilePaths(options?: {
+  cwd?: string
+  workspaceRoot?: string
+  envFile?: string
+  containerDir?: string
+}): string[] {
   const cwd = options?.cwd ?? process.cwd()
   const workspaceRoot = options?.workspaceRoot ?? workspaceRootFromSource
   const apiDir = resolve(workspaceRoot, 'apps/api')
-  return uniquePaths([
+  const envFile = options?.envFile ?? process.env.ENV_FILE
+  const containerDir = options?.containerDir ?? '/app'
+  const paths = [
+    resolve(containerDir, '.env'),
     resolve(workspaceRoot, '.env'),
     resolve(apiDir, '.env'),
     resolve(cwd, '.env'),
+    resolve(containerDir, '.env.local'),
     resolve(workspaceRoot, '.env.local'),
     resolve(apiDir, '.env.local'),
     resolve(cwd, '.env.local'),
-  ])
+  ]
+  if (envFile) paths.push(envFile)
+  return uniquePaths(paths)
 }
 
-/** 先 `.env` 再 `.env.local`；local 覆盖同名文件值；已有进程环境优先。 */
-export function loadDotenvFiles(options?: { cwd?: string; workspaceRoot?: string; env?: NodeJS.ProcessEnv }): void {
+/** 文件顺序：`.env` → `.env.local` → `ENV_FILE`。后出现的覆盖先出现的；已有进程环境优先。跳过目录。 */
+export function loadDotenvFiles(options?: {
+  cwd?: string
+  workspaceRoot?: string
+  envFile?: string
+  containerDir?: string
+  env?: NodeJS.ProcessEnv
+}): void {
   const env = options?.env ?? process.env
   const contents: Array<Record<string, string>> = []
   for (const path of dotenvFilePaths(options)) {
-    if (!existsSync(path)) continue
+    if (!isReadableEnvFile(path)) continue
     contents.push(parseDotenv(readFileSync(path)))
   }
   applyEnvFiles(env, contents)

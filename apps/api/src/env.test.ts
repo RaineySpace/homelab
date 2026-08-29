@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { applyEnvFiles, loadDotenvFiles, loadEnv } from './env.js'
+import { applyEnvFiles, isReadableEnvFile, loadDotenvFiles, loadEnv } from './env.js'
 
 describe('env files', () => {
   it('lets .env.local override .env but never overrides existing process env', () => {
@@ -26,6 +26,44 @@ describe('env files', () => {
     expect(env.A).toBe('shell')
     expect(env.B).toBe('3')
     expect(env.DEEPSEEK_API_KEY).toBe('from-local')
+  })
+
+  it('treats empty process env as set and does not fill from file', () => {
+    const env: NodeJS.ProcessEnv = { DEEPSEEK_API_KEY: '' }
+    applyEnvFiles(env, [{ DEEPSEEK_API_KEY: 'from-file' }])
+    expect(env.DEEPSEEK_API_KEY).toBe('')
+  })
+
+  it('skips a directory that Docker created instead of an env file', () => {
+    const root = mkdtempSync(join(tmpdir(), 'family-os-env-dir-'))
+    const containerDir = join(root, 'app')
+    mkdirSync(join(containerDir), { recursive: true })
+    mkdirSync(join(containerDir, '.env'))
+    writeFileSync(join(root, '.env'), 'DEEPSEEK_API_KEY=from-real-file\n')
+    const env: NodeJS.ProcessEnv = {}
+    loadDotenvFiles({ cwd: root, workspaceRoot: root, containerDir, env })
+    expect(isReadableEnvFile(join(containerDir, '.env'))).toBe(false)
+    expect(env.DEEPSEEK_API_KEY).toBe('from-real-file')
+  })
+
+  it('reads container .env when no workspace file exists', () => {
+    const root = mkdtempSync(join(tmpdir(), 'family-os-env-ctr-'))
+    const containerDir = join(root, 'app')
+    mkdirSync(containerDir, { recursive: true })
+    writeFileSync(join(containerDir, '.env'), 'BOOTSTRAP_ADMIN_PASSWORD=from-container\n')
+    const env: NodeJS.ProcessEnv = { DATA_DIR: '/data' }
+    loadDotenvFiles({ cwd: join(root, 'cwd'), workspaceRoot: root, containerDir, env })
+    expect(env.DATA_DIR).toBe('/data')
+    expect(env.BOOTSTRAP_ADMIN_PASSWORD).toBe('from-container')
+  })
+
+  it('lets ENV_FILE overlay other env files', () => {
+    const root = mkdtempSync(join(tmpdir(), 'family-os-env-file-'))
+    writeFileSync(join(root, '.env'), 'PUBLIC_ORIGIN=from-root\n')
+    writeFileSync(join(root, 'custom.env'), 'PUBLIC_ORIGIN=from-custom\n')
+    const env: NodeJS.ProcessEnv = {}
+    loadDotenvFiles({ cwd: root, workspaceRoot: root, envFile: join(root, 'custom.env'), env })
+    expect(env.PUBLIC_ORIGIN).toBe('from-custom')
   })
 
   it('lets cwd .env.local win over workspace .env', () => {

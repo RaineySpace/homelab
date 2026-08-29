@@ -25,7 +25,7 @@ pnpm dev
 - API: http://127.0.0.1:3001
 - OpenAPI: http://127.0.0.1:3001/api/v1/openapi.json
 - 默认账号：`admin` / `changeme`（见 `.env.example`）
-- Agent 密钥：`DEEPSEEK_API_KEY` 只从环境变量读取（`.env` / `.env.local`，后者覆盖前者）
+- Agent 密钥：`DEEPSEEK_API_KEY` 只从环境变量读取（优先级：进程环境 > `ENV_FILE` > `.env.local` > `.env`）
 
 ## 常用命令
 
@@ -38,4 +38,10 @@ pnpm dev
 
 ## 部署
 
-见 [部署文档](./docs/architecture/deployment.md) 与根目录 `compose.yaml`。
+```bash
+cp .env.example .env
+cp .env.local.example .env.local
+docker compose up --build
+```
+
+入口：http://localhost:8080 。优先级与密钥注入见 [部署文档](./docs/architecture/deployment.md)。

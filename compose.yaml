@@ -6,40 +6,56 @@ services:
     volumes:
       - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
     depends_on:
-      - web
-      - api
+      web:
+        condition: service_started
+      api:
+        condition: service_healthy
 
   web:
     build:
       context: .
       dockerfile: docker/Dockerfile
       target: web
+      args:
+        INTERNAL_API_BASE_URL: http://api:3001/api/v1
+        NEXT_PUBLIC_API_BASE_URL: /api/v1
     environment:
-      INTERNAL_API_BASE_URL: http://api:3001/api/v1
-      NEXT_PUBLIC_API_BASE_URL: /api/v1
+      HOSTNAME: 0.0.0.0
+      PORT: "3000"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
   api:
     build:
       context: .
       dockerfile: docker/Dockerfile
       target: api
+    env_file:
+      - path: .env
+        required: false
+      - path: .env.local
+        required: false
     environment:
       DATA_DIR: /data
       API_HOST: 0.0.0.0
       API_PORT: 3001
-      COOKIE_SECURE: "false"
-      BOOTSTRAP_ADMIN_USERNAME: admin
-      BOOTSTRAP_ADMIN_PASSWORD: changeme
-      BOOTSTRAP_HOUSEHOLD_NAME: 默认家庭
-      PUBLIC_ORIGIN: http://localhost:8080
-      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
-      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
-      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-v4-flash}
-      SESSION_SECRET: ${SESSION_SECRET:-dev-session-secret-change-me}
+      NODE_ENV: production
+      PUBLIC_ORIGIN: ${COMPOSE_PUBLIC_ORIGIN:-http://localhost:8080}
     volumes:
       - family-data:/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3001/api/v1/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
 
   backup:
     image: keinos/sqlite3:latest
