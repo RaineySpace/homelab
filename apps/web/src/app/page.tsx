@@ -1,46 +1,42 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { AppShell } from '@/components/AppShell'
+import { PageHeader } from '@/components/page-header'
+import { SectionCards } from '@/components/section-cards'
+import { StatusAlert } from '@/components/status-alert'
 import { api } from '@/lib/api'
 
 type Counts = { people: number; recipes: number; meals: number; tasks: number }
 
 export default function HomePage() {
   const [counts, setCounts] = useState<Counts | null>(null)
+  const [error, setError] = useState('')
   useEffect(() => {
     Promise.all([
       api<unknown[]>('/people'),
       api<unknown[]>('/recipes'),
       api<unknown[]>('/meals'),
       api<unknown[]>('/tasks'),
-    ]).then(([people, recipes, meals, tasks]) => {
-      setCounts({
-        people: people.length,
-        recipes: recipes.length,
-        meals: meals.length,
-        tasks: tasks.length,
+    ])
+      .then(([people, recipes, meals, tasks]) => {
+        setCounts({
+          people: people.length,
+          recipes: recipes.length,
+          meals: meals.length,
+          tasks: tasks.length,
+        })
       })
-    })
+      .catch(() => setError('暂时无法读取家庭数据，请稍后重试。'))
   }, [])
   return (
     <AppShell>
-      <h1>家庭总览</h1>
-      <p className="muted">Next.js 只负责呈现；所有家庭事实都由 Hono API 解释和改变。</p>
-      <div className="cards">
-        {[
-          ['人物', counts?.people, '/people'],
-          ['菜谱', counts?.recipes, '/recipes'],
-          ['用餐', counts?.meals, '/meals'],
-          ['任务', counts?.tasks, '/tasks'],
-        ].map(([label, value, href]) => (
-          <Link key={href} href={String(href)} className="card">
-            <div className="muted">{label}</div>
-            <h2>{value ?? '…'}</h2>
-          </Link>
-        ))}
-      </div>
+      <PageHeader
+        title="欢迎回家"
+        description="在一个地方查看家人、菜谱、用餐计划和待办事项。"
+      />
+      <StatusAlert error={error} />
+      <SectionCards counts={counts} />
     </AppShell>
   )
 }

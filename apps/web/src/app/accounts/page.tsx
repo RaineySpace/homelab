@@ -1,8 +1,18 @@
 'use client'
 
 import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { KeyRoundIcon, PowerIcon, SaveIcon, UserPlusIcon, UsersRoundIcon } from 'lucide-react'
 import { AppShell } from '@/components/AppShell'
+import { PageHeader } from '@/components/page-header'
+import { StatusAlert } from '@/components/status-alert'
 import { api, problemMessage } from '@/lib/api'
+import { Badge } from '@family-os/ui/components/badge'
+import { Button } from '@family-os/ui/components/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@family-os/ui/components/card'
+import { Input } from '@family-os/ui/components/input'
+import { Label } from '@family-os/ui/components/label'
+import { NativeSelect, NativeSelectOption } from '@family-os/ui/components/native-select'
+import { Separator } from '@family-os/ui/components/separator'
 
 type Role = 'owner' | 'member' | 'viewer'
 type Person = { id: string; name: string; archivedAt: string | null }
@@ -89,65 +99,73 @@ function AccountCard({
   }
 
   return (
-    <article className="panel account-card">
-      <div className="page-header">
-        <div>
-          <h2>{account.person?.name ?? '未关联人物'}</h2>
-          <p className="muted account-meta">
+    <Card>
+      <CardHeader>
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-2">
+              <span className="flex size-8 items-center justify-center rounded-xl bg-muted"><UsersRoundIcon className="size-4" /></span>
+              {account.person?.name ?? '未关联人物'}
+            </CardTitle>
+            <CardDescription>
             {roleLabels[account.role]} · {account.disabledAt ? '已停用' : '已启用'}
-          </p>
+            </CardDescription>
+          </div>
+          <Badge variant={account.disabledAt ? 'destructive' : 'secondary'}>
+            {account.disabledAt ? '停用' : '启用'}
+          </Badge>
         </div>
-        <span className={`badge ${account.disabledAt ? 'disabled' : 'enabled'}`}>
-          {account.disabledAt ? '停用' : '启用'}
-        </span>
-      </div>
-
-      <form className="form-grid" onSubmit={save}>
-        <label>
-          用户名
-          <input value={username} onChange={(event) => setUsername(event.target.value)} required maxLength={80} />
-        </label>
-        <label>
-          关联人物
-          <select value={personId} onChange={(event) => setPersonId(event.target.value)} required>
-            <option value="" disabled>选择人物</option>
-            {selectablePeople.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}
-          </select>
-        </label>
+      </CardHeader>
+      <CardContent className="grid gap-5">
+        <form className="grid gap-4" onSubmit={save}>
+          <div className="grid gap-2">
+            <Label htmlFor={`username-${account.id}`}>用户名</Label>
+            <Input id={`username-${account.id}`} value={username} onChange={(event) => setUsername(event.target.value)} required maxLength={80} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor={`person-${account.id}`}>关联人物</Label>
+            <NativeSelect id={`person-${account.id}`} value={personId} onChange={(event) => setPersonId(event.target.value)} required className="w-full">
+              <NativeSelectOption value="" disabled>选择人物</NativeSelectOption>
+              {selectablePeople.map((person) => <NativeSelectOption key={person.id} value={person.id}>{person.name}</NativeSelectOption>)}
+            </NativeSelect>
+          </div>
         {!isOwner ? (
-          <label>
-            角色
-            <select value={role} onChange={(event) => setRole(event.target.value as 'member' | 'viewer')}>
-              <option value="member">member（可读写）</option>
-              <option value="viewer">viewer（只读）</option>
-            </select>
-          </label>
+            <div className="grid gap-2">
+              <Label htmlFor={`role-${account.id}`}>角色</Label>
+              <NativeSelect id={`role-${account.id}`} value={role} onChange={(event) => setRole(event.target.value as 'member' | 'viewer')} className="w-full">
+                <NativeSelectOption value="member">member（可读写）</NativeSelectOption>
+                <NativeSelectOption value="viewer">viewer（只读）</NativeSelectOption>
+              </NativeSelect>
+            </div>
         ) : (
-          <p className="muted">owner 角色不可变更。</p>
+            <p className="text-sm text-muted-foreground">owner 角色不可变更。</p>
         )}
-        <div>
-          <button className="btn" type="submit" disabled={busy}>保存资料</button>
-        </div>
-      </form>
+          <Button className="w-fit" type="submit" disabled={busy}><SaveIcon />保存资料</Button>
+        </form>
 
       {!isOwner ? (
         <>
-          <form className="row account-action" onSubmit={resetPassword}>
-            <input
-              aria-label={`重置 ${account.username} 的密码`}
-              type="password"
-              placeholder="新密码（至少 12 个字符）"
-              value={newPassword}
-              onChange={(event) => setNewPassword(event.target.value)}
-              minLength={12}
-              maxLength={200}
-              required
-            />
-            <button className="btn secondary" type="submit" disabled={busy}>重置密码</button>
+          <Separator />
+          <form className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end" onSubmit={resetPassword}>
+            <div className="grid gap-2">
+              <Label htmlFor={`password-${account.id}`}>重置密码</Label>
+              <Input
+                id={`password-${account.id}`}
+                aria-label={`重置 ${account.username} 的密码`}
+                type="password"
+                placeholder="至少 12 个字符"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                minLength={12}
+                maxLength={200}
+                required
+              />
+            </div>
+            <Button variant="outline" type="submit" disabled={busy}><KeyRoundIcon />重置密码</Button>
           </form>
-          <div className="account-action">
-            <button
-              className={`btn ${account.disabledAt ? 'secondary' : 'danger'}`}
+          <div>
+            <Button
+              variant={account.disabledAt ? 'outline' : 'destructive'}
               type="button"
               disabled={busy}
               onClick={() => run(
@@ -155,16 +173,17 @@ function AccountCard({
                 account.disabledAt ? '账号已启用，旧会话不会恢复。' : '账号已停用，全部会话已退出。',
               )}
             >
+              <PowerIcon />
               {account.disabledAt ? '启用账号' : '停用账号'}
-            </button>
+            </Button>
           </div>
         </>
       ) : (
-        <p className="muted account-action">owner 不能在此重置密码或停用，请到“设置”修改自己的密码。</p>
+          <p className="border-t pt-4 text-sm text-muted-foreground">owner 不能在此重置密码或停用，请到“设置”修改自己的密码。</p>
       )}
-      {error ? <p className="error">{error}</p> : null}
-      {message ? <p className="success">{message}</p> : null}
-    </article>
+        <StatusAlert error={error} message={message} />
+      </CardContent>
+    </Card>
   )
 }
 
@@ -243,96 +262,95 @@ export default function AccountsPage() {
 
   return (
     <AppShell>
-      <div className="page-header">
-        <div>
-          <h1>账号管理</h1>
-          <p className="muted">owner 管理家庭账号；member 可读写，viewer 只读。</p>
-        </div>
-      </div>
-
-      <form className="panel form-grid" onSubmit={createAccount}>
-        <h2>新增普通账号</h2>
-        <div className="form-columns">
-          <label>
-            用户名
-            <input name="username" required maxLength={80} autoComplete="off" />
-          </label>
-          <label>
-            初始密码
-            <input name="password" type="password" required minLength={12} maxLength={200} autoComplete="new-password" />
-          </label>
-          <label>
-            角色
-            <select name="role" defaultValue="member">
-              <option value="member">member（可读写）</option>
-              <option value="viewer">viewer（只读）</option>
-            </select>
-          </label>
-        </div>
-        <fieldset>
-          <legend>关联家庭人物</legend>
-          <div className="row mode-switch">
-            <label className="inline-label">
-              <input type="radio" name="personMode" checked={personMode === 'existing'} onChange={() => setPersonMode('existing')} />
-              选择已有人物
-            </label>
-            <label className="inline-label">
-              <input type="radio" name="personMode" checked={personMode === 'new'} onChange={() => setPersonMode('new')} />
-              同时新建人物
-            </label>
-          </div>
-          {personMode === 'existing' ? (
-            <label>
-              未绑定人物
-              <select name="personId" required defaultValue="">
-                <option value="" disabled>选择人物</option>
-                {availablePeople.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}
-              </select>
-            </label>
-          ) : (
-            <div className="form-columns">
-              <label>
-                姓名
-                <input name="personName" required maxLength={50} />
-              </label>
-              <label>
-                性别（可选）
-                <select name="sex" defaultValue="">
-                  <option value="">未填写</option>
-                  <option value="female">女</option>
-                  <option value="male">男</option>
-                  <option value="other">其他</option>
-                  <option value="unknown">未知</option>
-                </select>
-              </label>
-              <label>
-                出生年份（可选）
-                <input name="birthYear" type="number" min={1900} max={2100} />
-              </label>
-              <label>
-                月（可选）
-                <input name="birthMonth" type="number" min={1} max={12} />
-              </label>
-              <label>
-                日（可选）
-                <input name="birthDay" type="number" min={1} max={31} />
-              </label>
+      <PageHeader title="账号管理" description="owner 管理家庭账号；member 可读写，viewer 只读。" />
+      <StatusAlert error={error} message={message} />
+      <form onSubmit={createAccount}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><UserPlusIcon className="size-5" />新增普通账号</CardTitle>
+            <CardDescription>每个账号都必须关联一位家庭人物。</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-5">
+            <div className="grid gap-4 @xl/main:grid-cols-3">
+              <div className="grid gap-2">
+                <Label htmlFor="new-username">用户名</Label>
+                <Input id="new-username" name="username" required maxLength={80} autoComplete="off" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="initial-password">初始密码</Label>
+                <Input id="initial-password" name="password" type="password" required minLength={12} maxLength={200} autoComplete="new-password" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="new-role">角色</Label>
+                <NativeSelect id="new-role" name="role" defaultValue="member" className="w-full">
+                  <NativeSelectOption value="member">member（可读写）</NativeSelectOption>
+                  <NativeSelectOption value="viewer">viewer（只读）</NativeSelectOption>
+                </NativeSelect>
+              </div>
             </div>
+            <fieldset className="grid gap-4 rounded-2xl border p-4">
+              <legend className="px-2 text-sm font-medium">关联家庭人物</legend>
+              <div className="flex flex-wrap gap-4">
+                <Label className="cursor-pointer">
+                  <input className="size-4 accent-primary" type="radio" name="personMode" checked={personMode === 'existing'} onChange={() => setPersonMode('existing')} />
+                  选择已有人物
+                </Label>
+                <Label className="cursor-pointer">
+                  <input className="size-4 accent-primary" type="radio" name="personMode" checked={personMode === 'new'} onChange={() => setPersonMode('new')} />
+                  同时新建人物
+                </Label>
+              </div>
+          {personMode === 'existing' ? (
+              <div className="grid gap-2">
+                <Label htmlFor="existing-person">未绑定人物</Label>
+                <NativeSelect id="existing-person" name="personId" required defaultValue="" className="w-full">
+                  <NativeSelectOption value="" disabled>选择人物</NativeSelectOption>
+                  {availablePeople.map((person) => <NativeSelectOption key={person.id} value={person.id}>{person.name}</NativeSelectOption>)}
+                </NativeSelect>
+              </div>
+          ) : (
+              <div className="grid gap-4 @xl/main:grid-cols-2 @4xl/main:grid-cols-5">
+                <div className="grid gap-2 @4xl/main:col-span-2">
+                  <Label htmlFor="person-name">姓名</Label>
+                  <Input id="person-name" name="personName" required maxLength={50} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="person-sex">性别</Label>
+                  <NativeSelect id="person-sex" name="sex" defaultValue="" className="w-full">
+                    <NativeSelectOption value="">未填写</NativeSelectOption>
+                    <NativeSelectOption value="female">女</NativeSelectOption>
+                    <NativeSelectOption value="male">男</NativeSelectOption>
+                    <NativeSelectOption value="other">其他</NativeSelectOption>
+                    <NativeSelectOption value="unknown">未知</NativeSelectOption>
+                  </NativeSelect>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="birth-year">出生年份</Label>
+                  <Input id="birth-year" name="birthYear" type="number" min={1900} max={2100} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="birth-month">月</Label>
+                  <Input id="birth-month" name="birthMonth" type="number" min={1} max={12} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="birth-day">日</Label>
+                  <Input id="birth-day" name="birthDay" type="number" min={1} max={31} />
+                </div>
+              </div>
           )}
-        </fieldset>
-        {availablePeople.length === 0 && personMode === 'existing' ? (
-          <p className="muted">当前没有未绑定人物，可选择“同时新建人物”。</p>
-        ) : null}
-        {error ? <p className="error">{error}</p> : null}
-        {message ? <p className="success">{message}</p> : null}
-        <div>
-          <button className="btn" type="submit" disabled={submitting}>
-            {submitting ? '创建中…' : '创建账号'}
-          </button>
-        </div>
+            </fieldset>
+            {availablePeople.length === 0 && personMode === 'existing' ? (
+              <p className="text-sm text-muted-foreground">当前没有未绑定人物，可选择“同时新建人物”。</p>
+            ) : null}
+            <Button className="w-fit" type="submit" disabled={submitting}>
+              <UserPlusIcon />
+              {submitting ? '创建中…' : '创建账号'}
+            </Button>
+          </CardContent>
+        </Card>
       </form>
 
-      <section className="account-list">
+      <section className="grid gap-4 @3xl/main:grid-cols-2">
         {accounts.map((account) => (
           <AccountCard
             key={account.id}
@@ -342,6 +360,11 @@ export default function AccountsPage() {
             onChanged={refresh}
           />
         ))}
+        {accounts.length === 0 ? (
+          <div className="col-span-full rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground">
+            暂无可管理账号。
+          </div>
+        ) : null}
       </section>
     </AppShell>
   )

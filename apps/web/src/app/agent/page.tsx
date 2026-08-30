@@ -1,8 +1,16 @@
 'use client'
 
 import { FormEvent, useEffect, useRef, useState } from 'react'
+import { BotIcon, SendIcon, SparklesIcon, TerminalSquareIcon } from 'lucide-react'
 import { AppShell } from '@/components/AppShell'
+import { PageHeader } from '@/components/page-header'
+import { StatusAlert } from '@/components/status-alert'
 import { api, problemMessage } from '@/lib/api'
+import { Badge } from '@family-os/ui/components/badge'
+import { Button } from '@family-os/ui/components/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@family-os/ui/components/card'
+import { Input } from '@family-os/ui/components/input'
+import { Label } from '@family-os/ui/components/label'
 
 type AgentEvent = { type: string; delta?: string; summary?: string; tool?: string }
 type AgentRun = {
@@ -43,6 +51,7 @@ export default function AgentPage() {
   const [log, setLog] = useState('')
   const [error, setError] = useState('')
   const [model, setModel] = useState<AgentModel | null>(null)
+  const [running, setRunning] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
@@ -58,6 +67,7 @@ export default function AgentPage() {
     const message = String(new FormData(formEl).get('message'))
     setError('')
     setLog('正在思考…')
+    setRunning(true)
     try {
       const run = await api<AgentRun>('/agent/runs', {
         method: 'POST',
@@ -66,19 +76,46 @@ export default function AgentPage() {
       setLog(formatEvents(run.events) || `状态：${run.status}`)
     } catch (err) {
       setError(problemMessage(err))
+    } finally {
+      setRunning(false)
     }
   }
 
   return (
     <AppShell>
-      <h1>家庭助手</h1>
-      <p className="muted">{model ? statusText(model) : '正在读取当前模型…'}</p>
-      <form ref={formRef} className="panel row" method="post" onSubmit={onSubmit}>
-        <input name="message" placeholder="帮我登记一个叫妈妈的人" required style={{ flex: 1 }} />
-        <button className="btn" type="submit">发送</button>
-      </form>
-      {error ? <p className="error">{error}</p> : null}
-      <pre className="stream" style={{ marginTop: 16 }}>{log || '等待消息…'}</pre>
+      <PageHeader
+        title="家庭助手"
+        description="用自然语言发起家庭操作；涉及敏感写入时，助手会先请求确认。"
+        action={<Badge variant={model?.usingFallback ? 'secondary' : 'outline'}><SparklesIcon />{model?.usingFallback ? '本地 Stub' : model ? model.model : '读取中'}</Badge>}
+      />
+      <StatusAlert error={error} />
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><BotIcon className="size-5" />告诉助手你想做什么</CardTitle>
+          <CardDescription>{model ? statusText(model) : '正在读取当前模型…'}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form ref={formRef} className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end" method="post" onSubmit={onSubmit}>
+            <div className="grid gap-2">
+              <Label htmlFor="agent-message">消息</Label>
+              <Input id="agent-message" name="message" placeholder="帮我登记一个叫妈妈的人" required />
+            </div>
+            <Button type="submit" disabled={running}>
+              <SendIcon />
+              {running ? '处理中…' : '发送'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+      <Card className="bg-neutral-950 text-neutral-100 dark:bg-black">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-neutral-100"><TerminalSquareIcon className="size-5" />运行记录</CardTitle>
+          <CardDescription className="text-neutral-400">助手的文本输出、工具调用与确认请求会显示在这里。</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <pre className="min-h-44 whitespace-pre-wrap font-mono text-sm leading-6 text-neutral-300">{log || '等待消息…'}</pre>
+        </CardContent>
+      </Card>
     </AppShell>
   )
 }

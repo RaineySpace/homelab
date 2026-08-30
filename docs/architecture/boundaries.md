@@ -63,7 +63,9 @@ https://family.example.com/api/v1/*  → Hono
 
 ```text
 apps/web ──► packages/api-client ──► openapi/openapi.json
+        └──► packages/ui（纯前端基础组件、主题与样式）
 apps/api ──x── apps/web
 apps/api 拥有全部 Domain
 packages/api-client 不包含任何服务端能力
+packages/ui 不包含家庭业务规则或 API 调用
 ```

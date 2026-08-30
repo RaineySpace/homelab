@@ -85,7 +85,7 @@ Next.js 可以做 BFF，但 BFF 偏向服务某一个前端。本项目明确要
 | 层 | 选择 |
 | --- | --- |
 | 工程组织 | pnpm workspace Monorepo |
-| Web | Next.js App Router（SSR / RSC 保留），PC + 手机响应式 |
+| Web | Next.js App Router（SSR / RSC 保留）+ shadcn/Base UI，PC + 手机响应式 |
 | API | Hono + Node.js，不跑 Edge |
 | 契约 | Zod Code First，OpenAPI Contract First |
 | 客户端 | `openapi-typescript` + `openapi-fetch` |
@@ -105,7 +105,8 @@ family-os/
 ├── packages/
 │   ├── api-client/                # 由 OpenAPI 生成，禁止手改 schema
 │   ├── config/                    # 共享 TSConfig 等
-│   └── testkit/                   # API 集成测试夹具
+│   ├── testkit/                   # API 集成测试夹具
+│   └── ui/                        # shadcn/Base UI 基础组件、主题与样式
 ├── docs/                          # 架构与需求（本文档树）
 ├── plans/                         # 独立计划目录
 ├── openapi/
@@ -116,7 +117,7 @@ family-os/
 └── package.json
 ```
 
-禁止建立前后端都直接引用的 `packages/domain`。Web 只依赖 `packages/api-client`；API 不依赖 Web；Domain 只存在于 API 内部。
+禁止建立前后端都直接引用的 `packages/domain`。Web 的业务数据只通过 `packages/api-client` 访问 API，并通过 `packages/ui` 复用纯前端基础组件；API 不依赖 Web 或 UI；Domain 只存在于 API 内部。
 
 ## 运行时边界
 

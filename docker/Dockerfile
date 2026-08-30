@@ -13,6 +13,7 @@ COPY apps/worker/package.json apps/worker/package.json
 COPY packages/api-client/package.json packages/api-client/package.json
 COPY packages/config/package.json packages/config/package.json
 COPY packages/testkit/package.json packages/testkit/package.json
+COPY packages/ui/package.json packages/ui/package.json
 RUN pnpm install --frozen-lockfile
 
 FROM deps AS api

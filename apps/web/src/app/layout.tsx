@@ -1,5 +1,12 @@
 import type { Metadata } from 'next'
-import './globals.css'
+import { Inter } from 'next/font/google'
+import { TooltipProvider } from '@family-os/ui/components/tooltip'
+import '@family-os/ui/globals.css'
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+})
 
 export const metadata: Metadata = {
   title: 'Family OS',
@@ -8,8 +15,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-CN">
-      <body>{children}</body>
+    <html lang="zh-CN" className={inter.variable}>
+      <body>
+        <TooltipProvider>{children}</TooltipProvider>
+      </body>
     </html>
   )
 }

@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   outputFileTracingRoot: path.join(configDir, '../..'),
   allowedDevOrigins: ['127.0.0.1', 'localhost'],
-  transpilePackages: ['@family-os/api-client'],
+  transpilePackages: ['@family-os/api-client', '@family-os/ui'],
   async rewrites() {
     return [
       {
